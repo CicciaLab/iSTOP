@@ -1,0 +1,25 @@
+Package: iSTOP
+Type: Package
+Title: iSTOP - Induced STOP Experiment Design
+Version: 0.1.0
+Author: Eric Bryant [aut, cre]
+Maintainer: Eric Bryant <eeb2139@columbia.edu>
+Description: iSTOP - tools to design induced STOP experiments.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
+Import:
+  assertthat,
+  dplyr,
+  stringr,
+  purrr,
+  tibble,
+  AnnotationDbi,
+  BSgenome,
+  Biostrings,
+  pbapply,
+  pbmcapply
+Suggests:
+  tidyverse
