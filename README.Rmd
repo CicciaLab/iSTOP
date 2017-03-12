@@ -1,0 +1,27 @@
+
+```{r}
+library(iSTOP)
+library(tidyverse)
+library(stringr)
+
+CDS_coordinates <- CDS_Scerevisiae_UCSC_sacCer3()
+
+scer <- BSgenome.Scerevisiae.UCSC.sacCer3::Scerevisiae
+
+results_BSgenome <- 
+  CDS_coordinates %>%
+  filter(chr %in% c('chrII', 'chrIII')) %>%
+  locate_codons(scer) %>%
+  locate_iSTOP(scer)
+
+chrII_and_III <- 
+  Biostrings::readDNAStringSet(
+    c('http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/chromosomes/chrII.fa.gz',
+      'http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/chromosomes/chrIII.fa.gz'))
+
+results_DNAStringSet <- 
+  CDS_coordinates %>%
+  filter(chr %in% c('chrII', 'chrIII')) %>%
+  locate_codons(chrII) %>%
+  locate_iSTOP(chrII)
+```
