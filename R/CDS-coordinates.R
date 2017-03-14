@@ -1,58 +1,55 @@
-# ---- CDS coordinates ----
-#' CDS coordinates
+# ---- CDS from UCSC ----
+#' Generate a CDS coordinates table
 #'
-#' Compiles a data frame of coding sequence coordinates for all exons in a
-#' [TxDb][GenomicFeatures::TxDb] object. Common gene names are also included
-#' from an [OrgDb][AnnotationDbi::AnnotationDb] object. Note that CDS coordinates are
-#' nearly equivalent to exon coordinates except the first and last exons that
-#' contain coding sequence should have coordinates that begin with the
-#' translation start codon and end with the stop codon.
+#' `CDS` takes transcript annotation tables in [UCSC format](https://genome.ucsc.edu/cgi-bin/hgTables)
+#' and reshapes them to have coordinates for each exon represented on a single
+#' row, rather than collapsed into a comma separated string in a single cell.
 #'
-#' @param txdb    [TxDb][GenomicFeatures::TxDb]
-#'                Transcript database object.
-#' @param orgdb   [OrgDb][AnnotationDbi::AnnotationDb]
-#'                Organism annotation database object.
-#' @param gene_id [String][assertthat::is.string]
-#'                Name of gene ID column in `orgdb`. See [columns][AnnotationDbi::columns].
-#' @param gene    [String][assertthat::is.string]
-#'                Name of gene symbol column in `orgdb`. See [columns][AnnotationDbi::columns]
-#' @param fix_chr A function to fix the `chr` column.
-#'                This function should accept a vector and return a
-#'                vector of the same length. See 'Details'.
-#' @param fix_ids A function to fix the gene_id column.
-#'                This function should accept a vector and return a
-#'                vector of the same length. See 'Details'.
+#' @param tx A URL to a genome's transcript reference file. This table must have
+#' tab separated fields and contain, identifiers for each transcript,
+#' chromosome, strand, CDS start/end, and exon start/end information.
+#' There should be only one row per transcript and exon start/end columns should
+#' contain comma separated cooordinates for each exon in the transcript.
+#' An example file can be found
+#' [here](http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz).
 #'
-#' @details If constructing a CDS data.frame manually (1) each row should
+#' @param tx2gene A URL to a tab separated file that maps transcript identifiers
+#' to common gene names. An example file can be found
+#' [here](http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/kgXref.txt.gz).
+#'
+#' @param tx_cols A character vector of expected column names for the
+#' known-gene reference file. Required columns: "tx", "chr", "strand",
+#' "cds_start", "cds_end", "exon_start" and "exon_end". All other columns will
+#' be ignored.
+#'
+#' @param tx2gene_cols A character vector of expected column names for the
+#' cross-reference file. Required columns: "tx" and "gene". All other columns
+#' will be ignored.
+#'
+#' @param shift_start Number of bases to shift the start positions. Defaults
+#' to 1 as this is necessary for compatibility with [Biostrings::getSeq] which
+#' includes the start position in the returned sequence and begins counting bases
+#' at 1.
+#'
+#' @param shift_end Number of bases to shift the end positions. Defaults to 0.
+#'
+#' @details The output of `CDS` should meet the following standards (1) each row should
 #' represent the coordinates of a single exon, (2) exons should be numbered in
-#' order with reference to the transcript's strand (i.e. the first exon should
-#' include the start codon), (3) and the first and last exon coordinates should
-#' beging with the start codon and end with the stop codon.
+#' order with reference to the transcript's strand (e.g. the first exon should
+#' include the start codon). The absolute numbering is unimportant so long as they
+#' are numbered in the correct order. (3) The first and last exon coordinates should
+#' begin with the start codon and end with the stop codon.
 #'
-#' Pre-defined CDS data.frame builders are provided. They
-#' are named `CDS_<Species>_<data-source>_<genome-assembly-ID>()`
-#'
-#' The arguments `fix_chr` and `fix_ids` are provided for convenience
-#' to fix chromosome names or gene IDs in the TxDb to match those in the
-#' OrgDb. The fix functions are applied as a transformation of the TxDb `chr` and
-#' `gene_id` columns. For example, this functionality is used
-#' in `CDS_Athaliana_BioMart_plantsmart28()` to provide a mapping of chromosome
-#' names from the TxDb format to the OrgDb format (1 = Chr1, Mt = ChrM ...). The
-#' `fix_ids` functionality is used in `CDS_Dmelanogaster_UCSC_dm6()` to remove a
-#' trailing '.1' that was added to every ID in the TxDb.
+#' To save the trouble of looking up URLs, pre-defined CDS data.frame builders
+#' are provided. They are named `CDS_<Species>_<data-source>_<genome-assembly-ID>()`.
 #'
 #' @return A data.frame with the following columns where each row represents
 #' a single exon:
 #'
 #'   - __COLUMN-NAME__ _`DATA-TYPE`_ DESCRIPTION
-#'   - __gene__    _`chr`_ Gene symbol
 #'   - __tx__      _`chr`_ Transcript symbol
-#'   - __exon__    _`int`_ Exon rank in gene
-#'   - __ncds__    _`int`_ Exon rank in CDS
-#'   - __gene_id__ _`chr`_ Gene identifier
-#'   - __tx_id__   _`int`_ Transcript identifier
-#'   - __exon_id__ _`int`_ Exon identifier
-#'   - __cds_id__  _`int`_ CDS identifier
+#'   - __gene__    _`chr`_ Gene symbol
+#'   - __exon__    _`int`_ Exon rank in gene (lowest contains ATG, highest contains native Stop)
 #'   - __chr__     _`chr`_ Chromosome
 #'   - __strand__  _`chr`_ Strand (+/-)
 #'   - __start__   _`int`_ CDS coordinate start (always < __end__)
@@ -60,100 +57,156 @@
 #'
 #' @rdname CDS
 #' @import dplyr
+#' @importFrom tidyr separate_rows
 #' @import stringr
-#' @importFrom AnnotationDbi keys
 #' @export
 #' @md
 
-CDS <- function(txdb, orgdb,
-                gene_id = 'ENTREZID', gene = 'SYMBOL',
-                fix_chr = NULL, fix_ids = NULL) {
-  # Join CDS coordinates and common gene symbols
-  left_join(
-      get_cds_coords(txdb, fix_chr, fix_ids), # from a TxDb object
-      get_symbols(orgdb, gene_id, gene),      # from an OrgDb object
-      by = 'GENEID'
+CDS <- function(tx, gene, tx_cols, gene_cols, shift_start = 1L, shift_end = 0L) {
+
+  message('Downloading CDS coordinates from:\n    ', tx, '\n    ', gene)
+
+  # Download known gene dataset from UCSC
+  txs <-
+    tx %>%
+    read_tsv(
+      col_names = tx_cols,
+      col_types = cols_only(  # keep only the following columns
+        tx         = col_character(),
+        chr        = col_character(),
+        strand     = col_character(),
+        cds_start  = col_integer(),
+        cds_end    = col_integer(),
+        exon_start = col_character(),
+        exon_end   = col_character()))
+
+  # Download known gene cross reference dataset from UCSC
+  genes <-
+    gene %>%
+    read_tsv(
+      col_names = gene_cols,
+      col_types = cols_only(  # keep only the following columns
+        tx = col_character(),
+        gene = col_character()))
+
+  # Expand coordinates and keep CDS coordinates only
+  expanded <-
+    txs %>%
+    separate_rows(exon_start, exon_end, sep = ',', convert = T) %>%
+    filter(
+      !is.na(exon_start),    # trailing commas result in NA after separation
+      cds_start != cds_end   # remove non-coding transcripts
     ) %>%
-    # Arrange variables as desired and write to file
-    select(
-      gene,               tx     = TXNAME,    exon    = EXONRANK, ncds,
-      gene_id = GENEID,   tx_id  = TXID,      exon_id = EXONID,   cds_id = CDSID,
-      chr     = CDSCHROM, strand = CDSSTRAND, start   = CDSSTART, end    = CDSEND
+    group_by(tx) %>%
+    mutate(
+      exon = switch(unique(strand), '+' = 1:n(), '-' = n():1),
+      # Identify first and last exon based on location of CDS start and end
+      first = (cds_start >= exon_start & cds_start <= exon_end),
+      last  = (cds_end   >= exon_start & cds_end   <= exon_end),
+      start = if_else(first, cds_start, exon_start) + shift_start,
+      end   = if_else(last,  cds_end,   exon_end)   + shift_end,
+      # Mark first and last exons of CDS
+      max_exon = max(exon[first | last]),
+      min_exon = min(exon[first | last])
     ) %>%
-    arrange(gene_id, tx_id, ncds)
+    # Remove exons that are not part of CDS
+    filter(exon >= min_exon, exon <= max_exon) %>%
+    select(tx, exon, chr, strand, start, end)
+
+  # Add gene names to table
+  right_join(genes, expanded, by = 'tx') %>% arrange(tx, exon)
 }
 
-# ---- Utilities for write_cds_coordinates ----
-
-'%||%' <- function(lhs, rhs) if (length(lhs)) lhs else rhs
-
-# Get a data frame of gene IDs and gene symbols. If gene ID maps to multiple
-# symbols, symbols will be collapsed into a single string with each symbol
-# separated with ' | '.
-get_symbols <- function(orgdb, gene_id, gene) {
-  # Mapping between entrezgene IDs and common gene symbols
-  suppressMessages({
-    orgdb %>%
-      AnnotationDbi::select(AnnotationDbi::keys(.), c(gene_id, gene)) %>%
-      select_(GENEID = gene_id, gene = gene) %>%
-      # Gene ID MUST be present
-      filter(!is.na(GENEID)) %>%
-      # Guarantee one row per ID
-      group_by(GENEID) %>%
-      summarise(gene = stringr::str_c(na.omit(gene) %||% '', collapse = ' | ')) %>%
-      ungroup
-  })
-}
-
-# Get a data frame of CDS coordinates. Allow user to fix Chromosome names and
-# Gene IDs with custom functions.
-get_cds_coords <- function(txdb, fix_chr, fix_ids) {
-  # Gather CDS, exon, transcript and gene information
-  cds <- suppressMessages({
-    txdb %>%
-      AnnotationDbi::select(
-        txdb,
-        keytype = 'CDSID',
-        keys    = AnnotationDbi::keys(., 'CDSID'),
-        columns = c(
-          'CDSID', 'GENEID', 'TXID', 'EXONID', 'TXNAME', 'EXONRANK',
-          'CDSCHROM', 'CDSSTRAND', 'CDSSTART', 'CDSEND')
-      ) %>%
-      filter(!is.na(GENEID)) %>%           # Some CDS IDs have no Gene ID
-      group_by(TXID) %>%
-      arrange(TXID, GENEID, EXONRANK) %>%  # Critical to arrange for CDS rank
-      mutate(ncds = 1:n()) %>%             # ncds is the rank in the CDS
-      ungroup
-  })
-
-  # User accessible fixes to CDS data
-  if (!is.null(fix_chr)) cds$CDSCHROM <- fix_chr(cds$CDSCHROM)
-  if (!is.null(fix_ids)) cds$GENEID   <- fix_ids(cds$GENEID)
-  return(cds)
-}
-
-require_bioc_install <- function(require, recommend) {
-  installed <- rownames(installed.packages())
-
-  if (!all(recommend %in% installed)) {
-    message(
-      'Recommended package installation:\n',
-      '  source("https://bioconductor.org/biocLite.R")\n',
-      '  biocLite(c("', stringr::str_c(recommend, collapse = '", "'), '")'
-    )
-  }
-
-  if (!all(require %in% installed)) {
-    stop(
-      'Required package installation:\n',
-      '  source("https://bioconductor.org/biocLite.R")\n',
-      '  biocLite(c("', stringr::str_c(require, collapse = '", "'), '")',
-      call. = FALSE
-    )
-  }
-}
 
 # ---- Pre-defined CDS constructors ----
+#' @rdname CDS
+#' @export
+CDS_Celegans_UCSC_ce11 <- function() {
+  message('Downloading CDS coordinates for all transcripts in Celegans from UCSC ce11...')
+  CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/ce11/database/ensGene.txt.gz',
+      gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/ce11/database/ensemblToGeneName.txt.gz',
+      tx_cols = c(
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
+        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+      gene_cols = c('tx', 'gene'))
+}
+
+#' @rdname CDS
+#' @export
+CDS_Dmelanogaster_UCSC_dm6 <- function() {
+  message('Gathering CDS coordinates for all transcripts in Dmelanogaster from UCSC dm6...')
+  CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/dm6/database/ensGene.txt.gz',
+      gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/dm6/database/ensemblToGeneName.txt.gz',
+      tx_cols = c(
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
+        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+      gene_cols = c('tx', 'gene'))
+}
+
+#' @rdname CDS
+#' @export
+CDS_Drerio_UCSC_danRer10 <- function() {
+  message('Gathering CDS coordinates for all transcripts in Drerio from UCSC danRer10...')
+  CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/danRer10/database/ensGene.txt.gz',
+      gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/danRer10/database/ensemblToGeneName.txt.gz',
+      tx_cols = c(
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
+        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+      gene_cols = c('tx', 'gene'))
+}
+
+#' @rdname CDS
+#' @export
+CDS_Hsapiens_UCSC_hg38 <- function() {
+  message('Gathering CDS coordinates for all transcripts in Hsapiens from UCSC hg38...')
+  CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz',
+      gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/kgXref.txt.gz',
+      tx_cols = c(
+        'tx', 'chr', 'strand', 'tx_start', 'tx_end', 'cds_start', 'cds_end',
+        'exon_count', 'exon_start', 'exon_end', 'protein_id', 'align_id'),
+      gene_cols = c(
+        'tx', 'mRNA', 'spID', 'spDisplayID', 'gene', 'refseq', 'protAcc',
+        'description', 'rfamAcc', 'tRnaName'))
+}
+
+#' @rdname CDS
+#' @export
+CDS_Mmusculus_UCSC_mm10 <- function() {
+  message('Gathering CDS coordinates for all transcripts in Mmusculus from UCSC mm10...')
+  CDS(tx   = 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/database/knownGene.txt.gz',
+      gene = 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/database/kgXref.txt.gz',
+      tx_cols = c(
+        'tx', 'chr', 'strand', 'tx_start', 'tx_end', 'cds_start', 'cds_end',
+        'exon_count', 'exon_start', 'exon_end', 'protein_id', 'align_id'),
+      gene_cols = c(
+        'tx', 'mRNA', 'spID', 'spDisplayID', 'gene', 'refseq', 'protAcc',
+        'description', 'rfamAcc', 'tRnaName'))
+}
+
+#' @rdname CDS
+#' @export
+CDS_Rnorvegicus_UCSC_rn6 <- function() {
+  message('Gathering CDS coordinates for all transcripts in Rnorvegicus from UCSC rn6...')
+  CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/rn6/database/ensGene.txt.gz',
+      gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/rn6/database/ensemblToGeneName.txt.gz',
+      tx_cols = c(
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
+        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+      gene_cols = c('tx', 'gene'))
+}
+
+#' @rdname CDS
+#' @export
+CDS_Scerevisiae_UCSC_sacCer3 <- function() {
+  message('Gathering CDS coordinates for all transcripts in Scerevisiae UCSC sacCer3...')
+  CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/database/sgdGene.txt.gz',
+      gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/database/sgdToName.txt.gz',
+      tx_cols = c(
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
+        'exonCount', 'exonStarts', 'exonEnds', 'proteinID'),
+      gene_cols = c('tx', 'gene'))
+}
+
 #' @rdname CDS
 #' @export
 CDS_Athaliana_BioMart_plantsmart28 <- function() {
@@ -164,7 +217,7 @@ CDS_Athaliana_BioMart_plantsmart28 <- function() {
 
   message('Gathering CDS coordinates for all transcripts in Athaliana BioMart TAIR9 plantsmart28...')
 
-  CDS(
+  CDS_from_Bioconductor(
     txdb    = TxDb.Athaliana.BioMart.plantsmart28::TxDb.Athaliana.BioMart.plantsmart28,
     orgdb   = org.At.tair.db::org.At.tair.db,
     gene_id = 'TAIR',
@@ -180,129 +233,111 @@ CDS_Athaliana_BioMart_plantsmart28 <- function() {
   )
 }
 
-#' @rdname CDS
-#' @export
-CDS_Celegans_UCSC_ce11 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Celegans.UCSC.ce11.refGene', 'org.Ce.eg.db'),
-    recommend = 'BSgenome.Celegans.UCSC.ce11'
-  )
 
-  message('Gathering CDS coordinates for all transcripts in Celegans UCSC ce11 entrezgene...')
+# ---- CDS coordinates from Bioconductor ----
+# CDS coordinates from Bioconductor packages
+#
+# Compiles a data frame of coding sequence coordinates for all exons in a
+# [TxDb][GenomicFeatures::TxDb] object. Common gene names are also included
+# from an [OrgDb][AnnotationDbi::AnnotationDb] object. Note that CDS coordinates are
+# nearly equivalent to exon coordinates except the first and last exons that
+# contain coding sequence should have coordinates that begin with the
+# translation start codon and end with the stop codon.
+#
+# @param txdb    [TxDb][GenomicFeatures::TxDb]
+#                Transcript database object.
+# @param orgdb   [OrgDb][AnnotationDbi::AnnotationDb]
+#                Organism annotation database object.
+# @param gene_id A string.
+#                Name of gene ID column in `orgdb`. See [columns][AnnotationDbi::columns].
+# @param gene    A string.
+#                Name of gene symbol column in `orgdb`. See [columns][AnnotationDbi::columns]
+# @param fix_chr **Expert use only** A function to fix the `chr` column.
+#                This function should accept a vector and return a
+#                vector of the same length. See 'Details'.
+# @param fix_ids **Expert use only** A function to fix the gene_id column.
+#                This function should accept a vector and return a
+#                vector of the same length. See 'Details'.
 
-  CDS(
-    txdb    = TxDb.Celegans.UCSC.ce11.refGene::TxDb.Celegans.UCSC.ce11.refGene,
-    orgdb   = org.Ce.eg.db::org.Ce.eg.db,
-    gene_id = 'ENTREZID',
-    gene    = 'SYMBOL'
-  )
+CDS_from_Bioconductor <- function(txdb, orgdb,
+                                  gene_id = 'ENTREZID', gene = 'SYMBOL',
+                                  fix_chr = NULL, fix_ids = NULL) {
+
+  # Join CDS coordinates and common gene symbols
+  left_join(
+    get_cds_coords(txdb, fix_chr, fix_ids), # from a TxDb object
+    get_symbols(orgdb, gene_id, gene),      # from an OrgDb object
+    by = 'GENEID'
+  ) %>%
+    # Arrange variables as desired
+    select(
+      tx  = TXNAME,   gene   = GENE,      exon  = EXONRANK,
+      chr = CDSCHROM, strand = CDSSTRAND, start = CDSSTART, end = CDSEND
+    ) %>%
+    arrange(gene, tx, exon)
 }
 
-#' @rdname CDS
-#' @export
-CDS_Dmelanogaster_UCSC_dm6 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Dmelanogaster.UCSC.dm6.ensGene', 'org.Dm.eg.db'),
-    recommend = 'BSgenome.Dmelanogaster.UCSC.dm6'
-  )
+# ---- Utilities for CDS_from_Bioconductor ----
 
-  message('Gathering CDS coordinates for all transcripts in Dmelanogaster UCSC dm6 ensembl...')
+'%||%' <- function(lhs, rhs) if (length(lhs)) lhs else rhs
 
-  CDS(
-    txdb    = TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene,
-    orgdb   = org.Dm.eg.db::org.Dm.eg.db,
-    gene_id = 'ENSEMBL',
-    gene    = 'SYMBOL',
-    fix_ids = function(.) stringr::str_replace(., '\\.[0-9]*?$', '') # gene IDs have trailing '.1'
-  )
+# Get a data frame of gene IDs and gene symbols. If gene ID maps to multiple
+# symbols, symbols will be collapsed into a single string with each symbol
+# separated with ' | '.
+get_symbols <- function(orgdb, gene_id, gene) {
+
+  # Mapping between entrezgene IDs and common gene symbols
+  suppressMessages({
+    orgdb %>%
+      AnnotationDbi::select(AnnotationDbi::keys(.), c(gene_id, gene)) %>%
+      select_(GENEID = gene_id, GENE = gene) %>%
+      # Gene ID MUST be present
+      filter(!is.na(GENEID)) %>%
+      # Guarantee one row per ID
+      group_by(GENEID) %>%
+      summarise(GENE = stringr::str_c(na.omit(GENE) %||% '', collapse = ' | ')) %>%
+      ungroup
+  })
 }
 
-#' @rdname CDS
-#' @export
-CDS_Drerio_UCSC_danRer10 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Drerio.UCSC.danRer10.refGene', 'org.Dr.eg.db'),
-    recommend = 'BSgenome.Drerio.UCSC.danRer10'
-  )
+# Get a data frame of CDS coordinates. Allow user to fix Chromosome names and
+# Gene IDs with custom functions.
+get_cds_coords <- function(txdb, fix_chr = NULL, fix_ids = NULL) {
+  # Gather CDS, exon, transcript and gene information
+  cds <- suppressMessages({
+    txdb %>%
+      AnnotationDbi::select(
+        txdb,
+        keytype = 'CDSID',
+        keys    = AnnotationDbi::keys(., 'CDSID'),
+        columns = c(
+          'CDSID', 'GENEID', 'TXID', 'EXONID', 'TXNAME', 'EXONRANK',
+          'CDSCHROM', 'CDSSTRAND', 'CDSSTART', 'CDSEND')
+      ) %>%
+      filter(!is.na(GENEID))           # Some CDS IDs have no Gene ID
+  })
 
-  message('Gathering CDS coordinates for all transcripts in Drerio UCSC danRer10 entrezgene...')
-
-  CDS(
-    txdb    = TxDb.Drerio.UCSC.danRer10.refGene::TxDb.Drerio.UCSC.danRer10.refGene,
-    orgdb   = org.Dr.eg.db::org.Dr.eg.db,
-    gene_id = 'ENTREZID',
-    gene    = 'SYMBOL'
-  )
+  # User accessible fixes to CDS data
+  if (!is.null(fix_chr)) cds$CDSCHROM <- fix_chr(cds$CDSCHROM)
+  if (!is.null(fix_ids)) cds$GENEID   <- fix_ids(cds$GENEID)
+  return(cds)
 }
 
-#' @rdname CDS
-#' @export
-CDS_Hsapiens_UCSC_hg38 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Hsapiens.UCSC.hg38.knownGene', 'org.Hs.eg.db'),
-    recommend = 'BSgenome.Hsapiens.UCSC.hg38'
-  )
+require_bioc_install <- function(require, recommend) {
+  installed <- rownames(installed.packages())
 
-  message('Gathering CDS coordinates for all transcripts in Hsapiens UCSC hg38 entrezgene...')
+  if (!all(recommend %in% installed)) {
+    message(
+      'Recommended package installation:\n',
+      '  BiocInstaller::biocLite(c("', stringr::str_c(recommend, collapse = '", "'), '"))'
+    )
+  }
 
-  CDS(
-    txdb    = TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene,
-    orgdb   = org.Hs.eg.db::org.Hs.eg.db,
-    gene_id = 'ENTREZID',
-    gene    = 'SYMBOL'
-  )
-}
-
-#' @rdname CDS
-#' @export
-CDS_Mmusculus_UCSC_mm10 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Mmusculus.UCSC.mm10.knownGene', 'org.Mm.eg.db'),
-    recommend = 'BSgenome.Mmusculus.UCSC.mm10'
-  )
-
-  message('Gathering CDS coordinates for all transcripts in Mmusculus UCSC mm10 entrezgene...')
-
-  CDS(
-    txdb    = TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
-    orgdb   = org.Mm.eg.db::org.Mm.eg.db,
-    gene_id = 'ENTREZID',
-    gene    = 'SYMBOL'
-  )
-}
-
-#' @rdname CDS
-#' @export
-CDS_Rnorvegicus_UCSC_rn6 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Rnorvegicus.UCSC.rn6.refGene', 'org.Rn.eg.db'),
-    recommend = 'BSgenome.Rnorvegicus.UCSC.rn6'
-  )
-
-  message('Gathering CDS coordinates for all transcripts in Rnorvegicus UCSC rn6 entrezgene...')
-
-  CDS(
-    txdb    = TxDb.Rnorvegicus.UCSC.rn6.refGene::TxDb.Rnorvegicus.UCSC.rn6.refGene,
-    orgdb   = org.Rn.eg.db::org.Rn.eg.db,
-    gene_id = 'ENTREZID',
-    gene    = 'SYMBOL'
-  )
-}
-
-#' @rdname CDS
-#' @export
-CDS_Scerevisiae_UCSC_sacCer3 <- function() {
-  require_bioc_install(
-    require   = c('TxDb.Scerevisiae.UCSC.sacCer3.sgdGene', 'org.Sc.sgd.db'),
-    recommend = 'BSgenome.Scerevisiae.UCSC.sacCer3'
-  )
-
-  message('Gathering CDS coordinates for all transcripts in Scerevisiae UCSC sacCer3 SGD gene...')
-
-  CDS(
-    txdb    = TxDb.Scerevisiae.UCSC.sacCer3.sgdGene::TxDb.Scerevisiae.UCSC.sacCer3.sgdGene,
-    orgdb   = org.Sc.sgd.db::org.Sc.sgd.db,
-    gene_id = 'ORF',    # ORF is used instead of ENTREZID
-    gene    = 'COMMON'  # COMMON is used instead of SYMBOL
-  )
+  if (!all(require %in% installed)) {
+    stop(
+      'Required package installation:\n',
+      '  BiocInstaller::biocLite(c("', stringr::str_c(require, collapse = '", "'), '"))',
+      call. = FALSE
+    )
+  }
 }

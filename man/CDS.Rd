@@ -2,7 +2,6 @@
 % Please edit documentation in R/CDS-coordinates.R
 \name{CDS}
 \alias{CDS}
-\alias{CDS_Athaliana_BioMart_plantsmart28}
 \alias{CDS_Celegans_UCSC_ce11}
 \alias{CDS_Dmelanogaster_UCSC_dm6}
 \alias{CDS_Drerio_UCSC_danRer10}
@@ -10,12 +9,10 @@
 \alias{CDS_Mmusculus_UCSC_mm10}
 \alias{CDS_Rnorvegicus_UCSC_rn6}
 \alias{CDS_Scerevisiae_UCSC_sacCer3}
-\title{CDS coordinates}
+\alias{CDS_Athaliana_BioMart_plantsmart28}
+\title{Generate a CDS coordinates table}
 \usage{
-CDS(txdb, orgdb, gene_id = "ENTREZID", gene = "SYMBOL", fix_chr = NULL,
-  fix_ids = NULL)
-
-CDS_Athaliana_BioMart_plantsmart28()
+CDS(tx, gene, tx_cols, gene_cols, shift_start = 1L, shift_end = 0L)
 
 CDS_Celegans_UCSC_ce11()
 
@@ -30,41 +27,46 @@ CDS_Mmusculus_UCSC_mm10()
 CDS_Rnorvegicus_UCSC_rn6()
 
 CDS_Scerevisiae_UCSC_sacCer3()
+
+CDS_Athaliana_BioMart_plantsmart28()
 }
 \arguments{
-\item{txdb}{\link[GenomicFeatures:TxDb]{TxDb}
-Transcript database object.}
+\item{tx}{A URL to a genome's transcript reference file. This table must have
+tab separated fields and contain, identifiers for each transcript,
+chromosome, strand, CDS start/end, and exon start/end information.
+There should be only one row per transcript and exon start/end columns should
+contain comma separated cooordinates for each exon in the transcript.
+An example file can be found
+\href{http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz}{here}.}
 
-\item{orgdb}{\link[AnnotationDbi:AnnotationDb]{OrgDb}
-Organism annotation database object.}
+\item{tx_cols}{A character vector of expected column names for the
+known-gene reference file. Required columns: "tx", "chr", "strand",
+"cds_start", "cds_end", "exon_start" and "exon_end". All other columns will
+be ignored.}
 
-\item{gene_id}{\link[assertthat:is.string]{String}
-Name of gene ID column in \code{orgdb}. See \link[AnnotationDbi:columns]{columns}.}
+\item{shift_start}{Number of bases to shift the start positions. Defaults
+to 1 as this is necessary for compatibility with \link[Biostrings:getSeq]{Biostrings::getSeq} which
+includes the start position in the returned sequence and begins counting bases
+at 1.}
 
-\item{gene}{\link[assertthat:is.string]{String}
-Name of gene symbol column in \code{orgdb}. See \link[AnnotationDbi:columns]{columns}}
+\item{shift_end}{Number of bases to shift the end positions. Defaults to 0.}
 
-\item{fix_chr}{A function to fix the \code{chr} column.
-This function should accept a vector and return a
-vector of the same length. See 'Details'.}
+\item{tx2gene}{A URL to a tab separated file that maps transcript identifiers
+to common gene names. An example file can be found
+\href{http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/kgXref.txt.gz}{here}.}
 
-\item{fix_ids}{A function to fix the gene_id column.
-This function should accept a vector and return a
-vector of the same length. See 'Details'.}
+\item{tx2gene_cols}{A character vector of expected column names for the
+cross-reference file. Required columns: "tx" and "gene". All other columns
+will be ignored.}
 }
 \value{
 A data.frame with the following columns where each row represents
 a single exon:
 \itemize{
 \item \strong{COLUMN-NAME} \emph{\code{DATA-TYPE}} DESCRIPTION
-\item \strong{gene}    \emph{\code{chr}} Gene symbol
 \item \strong{tx}      \emph{\code{chr}} Transcript symbol
-\item \strong{exon}    \emph{\code{int}} Exon rank in gene
-\item \strong{ncds}    \emph{\code{int}} Exon rank in CDS
-\item \strong{gene_id} \emph{\code{chr}} Gene identifier
-\item \strong{tx_id}   \emph{\code{int}} Transcript identifier
-\item \strong{exon_id} \emph{\code{int}} Exon identifier
-\item \strong{cds_id}  \emph{\code{int}} CDS identifier
+\item \strong{gene}    \emph{\code{chr}} Gene symbol
+\item \strong{exon}    \emph{\code{int}} Exon rank in gene (lowest contains ATG, highest contains native Stop)
 \item \strong{chr}     \emph{\code{chr}} Chromosome
 \item \strong{strand}  \emph{\code{chr}} Strand (+/-)
 \item \strong{start}   \emph{\code{int}} CDS coordinate start (always < \strong{end})
@@ -72,29 +74,18 @@ a single exon:
 }
 }
 \description{
-Compiles a data frame of coding sequence coordinates for all exons in a
-\link[GenomicFeatures:TxDb]{TxDb} object. Common gene names are also included
-from an \link[AnnotationDbi:AnnotationDb]{OrgDb} object. Note that CDS coordinates are
-nearly equivalent to exon coordinates except the first and last exons that
-contain coding sequence should have coordinates that begin with the
-translation start codon and end with the stop codon.
+\code{CDS} takes transcript annotation tables in \href{https://genome.ucsc.edu/cgi-bin/hgTables}{UCSC format}
+and reshapes them to have coordinates for each exon represented on a single
+row, rather than collapsed into a comma separated string in a single cell.
 }
 \details{
-If constructing a CDS data.frame manually (1) each row should
+The output of \code{CDS} should meet the following standards (1) each row should
 represent the coordinates of a single exon, (2) exons should be numbered in
-order with reference to the transcript's strand (i.e. the first exon should
-include the start codon), (3) and the first and last exon coordinates should
-beging with the start codon and end with the stop codon.
+order with reference to the transcript's strand (e.g. the first exon should
+include the start codon). The absolute numbering is unimportant so long as they
+are numbered in the correct order. (3) The first and last exon coordinates should
+begin with the start codon and end with the stop codon.
 
-Pre-defined CDS data.frame builders are provided. They
-are named \code{CDS_<Species>_<data-source>_<genome-assembly-ID>()}
-
-The arguments \code{fix_chr} and \code{fix_ids} are provided for convenience
-to fix chromosome names or gene IDs in the TxDb to match those in the
-OrgDb. The fix functions are applied as a transformation of the TxDb \code{chr} and
-\code{gene_id} columns. For example, this functionality is used
-in \code{CDS_Athaliana_BioMart_plantsmart28()} to provide a mapping of chromosome
-names from the TxDb format to the OrgDb format (1 = Chr1, Mt = ChrM ...). The
-\code{fix_ids} functionality is used in \code{CDS_Dmelanogaster_UCSC_dm6()} to remove a
-trailing '.1' that was added to every ID in the TxDb.
+To save the trouble of looking up URLs, pre-defined CDS data.frame builders
+are provided. They are named \code{CDS_<Species>_<data-source>_<genome-assembly-ID>()}.
 }
