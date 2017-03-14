@@ -57,7 +57,6 @@ biocLite(c(
   'tidyverse', 
   'assertthat',
   'pbapply',
-  'pbmcapply',
   'devtools',
   # Packages from Bioconductor (bioconductor.org)
   'BSgenome',
