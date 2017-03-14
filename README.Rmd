@@ -1,27 +1,161 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
 
 ```{r}
-library(iSTOP)
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Installation
+
+To use the iSTOP R package, begin by installing [R](https://cran.r-project.org). I also recommend installing [RStudio](https://www.rstudio.com/products/rstudio/download/). Once installed, open RStudio and run the following commands to install all necessary R packages. The lines that begin with a `#` are just comments to help you understand what the commands are inteded to do.
+
+```{r message = F, eval = F}
+# Source the Biocoductor installation tool - installs and loads the BiocInstaller 
+# package which provides the biocLite function.
+source("https://bioconductor.org/biocLite.R")
+
+# Install the following required packages (their dependencies will be included)
+biocLite(c(
+  # Packages from CRAN (cran.r-project.org)
+  'tidyverse', 
+  'assertthat',
+  'pbapply',
+  'pbmcapply',
+  'devtools',
+  # Packages from Bioconductor (bioconductor.org)
+  'AnnotationDbi',
+  'BSgenome',
+  'Biostrings',
+  'GenomicRanges',
+  'IRanges'))
+
+# If all went well, install the iSTOP package hosted on GitHub
+biocLite('ericedwardbryant/iSTOP')
+```
+
+**[WARNING](#WARNING)**
+
+# An example analysis
+
+Following installation, load the following packages to make their contents available for the analysis below.
+
+```{r message = F}
+# Load packages to be used in this analysis
 library(tidyverse)
-library(stringr)
+library(iSTOP)
+```
 
-CDS_coordinates <- CDS_Scerevisiae_UCSC_sacCer3()
+To locate iSTOP targets you will also need the following:
 
-scer <- BSgenome.Scerevisiae.UCSC.sacCer3::Scerevisiae
+1. CDS coordinates
+2. Genome sequence
 
-results_BSgenome <- 
-  CDS_coordinates %>%
-  filter(chr %in% c('chrII', 'chrIII')) %>%
-  locate_codons(scer) %>%
-  locate_iSTOP(scer)
+## CDS coordinates
 
-chrII_and_III <- 
-  Biostrings::readDNAStringSet(
-    c('http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/chromosomes/chrII.fa.gz',
-      'http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/chromosomes/chrIII.fa.gz'))
+This is an example table of CDS coordinates for *S. cerevisiae* *RAD14*. 
 
-results_DNAStringSet <- 
-  CDS_coordinates %>%
-  filter(chr %in% c('chrII', 'chrIII')) %>%
-  locate_codons(chrII) %>%
-  locate_iSTOP(chrII)
+| tx      | gene  | exon | chr     | strand | start  | end    |
+| :------ | :---- | :--- | :------ | :----- | :----- | :----- |
+| YMR201C | RAD14 | 1    | chrXIII |      - | 667018 | 667044 |
+| YMR201C | RAD14 | 2    | chrXIII |      - | 665845 | 666933 |
+
+This gene has a single transcript "YMR201C" which is encoded on the "-" strand and has two exons (1 row for each exon). Note that, since this gene is encoded on the "-" strand, the first base in the CDS is located on chrXIII at position 667044, and the last base in the CDS is at position 665845. It is critial that exons are numbered with respect to CDS orientation. Chromosomes should be named to match the sequence names in your genome. Strand must be either "+", or "-".
+
+The `CDS` function will generate a CDS table from annotation tables provided by the UCSC genome browser. Type `?CDS` in the R console to view the documentation of this function. Note that the documentation for `CDS` lists several pre-defined functions to access complete CDS coordinates for a given species and genome assembly. The example below will download and construct a CDS coordinates table for the Human genome hg38 assembly. Note that only exons that contain coding sequence are retained, hence some transcripts not having coordinates for e.g. exon #1.
+
+```{r message = FALSE}
+CDS_Hsapiens <- CDS_Hsapiens_UCSC_hg38()
+```
+
+Other pre-defined CDS functions include:
+
+| Type  | Species           | CDS function                           |
+| :---- | :---------------- | :------------------------------------- |
+| Worm  | *C. elegans*      | `CDS_Celegans_UCSC_ce11()`             |
+| Fly   | *D. melanogaster* | `CDS_Dmelanogaster_UCSC_dm6()`         |
+| Fish  | *D. rerio*        | `CDS_Dreriio_UCSC_danRer10()`          |
+| Human | *H. sapiens*      | `CDS_Hsapiens_UCSC_hg38()`             |
+| Mouse | *M. musculus*     | `CDS_Mmusculus_UCSC_mm10()`            |
+| Rat   | *R. norvegicus*   | `CDS_Rnorvegicus_UCSC_rn6()`           |
+| Yeast | *S. cerevisiae*   | `CDS_Scerevisiae_UCSC_sacCer3()`       |
+| Plant | *A. thaliana*     | `CDS_Athaliana_BioMart_plantsmart28()` |
+
+## Genome sequence
+
+### Using a BSgenome package
+
+Pre-built genome sequence packages are provided by Bioconductor as "BSgenome" packages. To get a list of all available BSgenome packages you can run `BSgenome::available.genomes()`. For this example we will install the BSgenome package that corresponds to the hg38 assemply (as this matches the CDS coordinates we downloaded earlier).
+
+```{r}
+# Note that the package only needs to be installed once. No need to run this again.
+BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
+```
+
+Once installed we can access the genome object like so:
+
+```{r}
+Genome_Hsapiens <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
+```
+
+### Or, using fasta sequence files
+
+Alternatively, you can construct a genome manually from a set of fasta files. Just make sure that the sequence names match those in the `chr` column of your CDS coordinates table and that the CDS coordinates are compatible with these sequences. This is not the recommended approach as sequence lookups are slower, but if this is what you have, or you 
+
+```{r}
+# Build custom genome of Human chromosomes X and Y
+Genome_Hsapiens_XY <- Biostrings::readDNAStringSet(
+  c('http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrX.fa.gz',
+    'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrY.fa.gz'))
+```
+
+# Seach for iSTOP
+
+```{r}
+# I will be limiting this analysis to chromosomes X and Y
+Hooray <-
+  CDS_Hsapiens %>%
+  filter(chr %in% c('chrX', 'chrY')) %>%
+  locate_codons(Genome_Hsapiens) %>%
+  locate_iSTOP(Genome_Hsapiens)
+```
+
+```{r}
+# This analysis will be limited to PLCXD1 and uses the FASTA sequences
+# Note that using FASTA sequences is MUCH slower than using a BSgenome
+Hooray_XY <-
+  CDS_Hsapiens %>%
+  filter(gene == 'PLCXD1') %>%
+  locate_codons(Genome_Hsapiens_XY) %>%
+  locate_iSTOP(Genome_Hsapiens_XY)
+```
+
+
+
+## WARNING
+
+I had to re-install from source packages to resolve this error:
+
+```
+Error in c(x, value) : 
+  could not find symbol "recursive" in environment of the generic function
+```
+
+The problem occurs after upgrading to R v3.3.3 due to a problem with the Biostrings Biocunductor package.
+
+Installing R packages from source requires developer tools. 
+
+- On MacOS, run `xcode-select --install` in terminal
+- On Debian/Ubuntu `sudo apt-get install build-essential`
+- On Windows, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/)
+
+Then re-installing the following packages from source resolved the bug. Your mileage may vary!
+
+```{r}
+BiocInstaller::biocLite(
+  c("BiocGenerics", "S4Vectors", "IRanges", "XVector", "Biostrings"), 
+  type = 'source'
+)
 ```
