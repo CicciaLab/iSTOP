@@ -86,7 +86,7 @@ CDS <- function(tx, gene, tx_cols, gene_cols, shift_start = 1L, shift_end = 0L) 
     read_tsv(
       col_names = gene_cols,
       col_types = cols_only(  # keep only the following columns
-        tx = col_character(),
+        tx   = col_character(),
         gene = col_character()))
 
   # Expand coordinates and keep CDS coordinates only
@@ -126,8 +126,8 @@ CDS_Celegans_UCSC_ce11 <- function() {
   CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/ce11/database/ensGene.txt.gz',
       gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/ce11/database/ensemblToGeneName.txt.gz',
       tx_cols = c(
-        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
-        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cds_start', 'cds_end',
+        'exonCount', 'exon_start', 'exon_end', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
       gene_cols = c('tx', 'gene'))
 }
 
@@ -138,8 +138,8 @@ CDS_Dmelanogaster_UCSC_dm6 <- function() {
   CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/dm6/database/ensGene.txt.gz',
       gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/dm6/database/ensemblToGeneName.txt.gz',
       tx_cols = c(
-        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
-        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cds_start', 'cds_end',
+        'exonCount', 'exon_start', 'exon_end', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
       gene_cols = c('tx', 'gene'))
 }
 
@@ -150,8 +150,8 @@ CDS_Drerio_UCSC_danRer10 <- function() {
   CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/danRer10/database/ensGene.txt.gz',
       gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/danRer10/database/ensemblToGeneName.txt.gz',
       tx_cols = c(
-        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
-        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cds_start', 'cds_end',
+        'exonCount', 'exon_start', 'exon_end', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
       gene_cols = c('tx', 'gene'))
 }
 
@@ -190,8 +190,8 @@ CDS_Rnorvegicus_UCSC_rn6 <- function() {
   CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/rn6/database/ensGene.txt.gz',
       gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/rn6/database/ensemblToGeneName.txt.gz',
       tx_cols = c(
-        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
-        'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cds_start', 'cds_end',
+        'exonCount', 'exon_start', 'exon_end', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames'),
       gene_cols = c('tx', 'gene'))
 }
 
@@ -202,8 +202,8 @@ CDS_Scerevisiae_UCSC_sacCer3 <- function() {
   CDS(tx      = 'http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/database/sgdGene.txt.gz',
       gene    = 'http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/database/sgdToName.txt.gz',
       tx_cols = c(
-        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd',
-        'exonCount', 'exonStarts', 'exonEnds', 'proteinID'),
+        'bin', 'tx', 'chr', 'strand', 'txStart', 'txEnd', 'cds_start', 'cds_end',
+        'exonCount', 'exon_start', 'exon_end', 'proteinID'),
       gene_cols = c('tx', 'gene'))
 }
 
