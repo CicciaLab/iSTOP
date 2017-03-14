@@ -102,6 +102,16 @@ The `CDS` function will generate a CDS table from annotation tables provided by 
 CDS_Hsapiens <- CDS_Hsapiens_UCSC_hg38()
 ```
 
+Please be polite to UCSC by limiting the number of times you download their annotation files. I recommend saving the CDS coordinates locally by writing them to a CSV file. For example:
+
+``` r
+# You probably should pick a different location than the desktop...
+CDS_Hsapiens %>% write_csv('~/Desktop/CDS-Hsapiens.csv')
+
+# Then anytime you want to look up iSTOP targets, begin by reading this file
+CDS_Hsapiens <- read_csv('~/Desktop/CDS-Hsapiens.csv')
+```
+
 Other pre-defined CDS functions include:
 
 | Type  | Species           | CDS function                           |
@@ -120,7 +130,7 @@ Genome sequence
 
 ### Using a BSgenome package
 
-Pre-built genome sequence packages are provided by Bioconductor as "BSgenome" packages. To get a list of all available BSgenome packages you can run `BSgenome::available.genomes()`. For this example we will install the BSgenome package that corresponds to the hg38 assemply (as this matches the CDS coordinates we downloaded earlier).
+Pre-built genome sequence packages are provided by Bioconductor as "BSgenome" packages. To get a list of all available BSgenome packages you can run `BSgenome::available.genomes()`. For this example we will install the BSgenome package that corresponds to the Human hg38 assembly (as this matches the CDS coordinates we downloaded earlier).
 
 ``` r
 # Note that the package only needs to be installed once. No need to run this again.
@@ -135,7 +145,7 @@ Genome_Hsapiens <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
 
 ### Or, using fasta sequence files
 
-Alternatively, you can construct a genome manually from a set of fasta files. Just make sure that the sequence names match those in the `chr` column of your CDS coordinates table and that the CDS coordinates are compatible with these sequences. This is not the recommended approach as sequence lookups are slower, but if this is what you have, or you
+Alternatively, you can construct a genome manually from a set of fasta files. Just make sure that the sequence names match those in the `chr` column of your CDS coordinates table and that the CDS coordinates are compatible with these sequences. This is not the recommended approach as sequence lookups are slower, but if this is an option if you are in a pinch!
 
 ``` r
 # Build custom genome of Human chromosomes X and Y
