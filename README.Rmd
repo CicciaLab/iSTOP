@@ -1,16 +1,10 @@
----
-output:
-  md_document:
-    variant: markdown_github
----
+# iSTOP - an R package for designing induced stop mutants
 
-```{r}
-knitr::opts_chunk$set(eval = FALSE)
-```
+Introduction...
 
 # Installation
 
-To use the iSTOP R package, begin by installing [R](https://cran.r-project.org). I also recommend installing [RStudio](https://www.rstudio.com/products/rstudio/download/). Once installed, open RStudio and run the following commands to install all necessary R packages. The lines that begin with a `#` are just comments to help you understand what the commands are inteded to do.
+First, instal [R](https://cran.r-project.org). Installing [RStudio](https://www.rstudio.com/products/rstudio/download/) is also recommended. Once installed, open RStudio and run the following commands in the console to install all necessary R packages.
 
 ```{r message = F, eval = F}
 # Source the Biocoductor installation tool - installs and loads the BiocInstaller 
@@ -26,7 +20,6 @@ biocLite(c(
   'pbmcapply',
   'devtools',
   # Packages from Bioconductor (bioconductor.org)
-  'AnnotationDbi',
   'BSgenome',
   'Biostrings',
   'GenomicRanges',
@@ -36,11 +29,9 @@ biocLite(c(
 biocLite('ericedwardbryant/iSTOP')
 ```
 
-**[WARNING](#WARNING)**
-
 # An example analysis
 
-Following installation, load the following packages to make their contents available for the analysis below.
+Load the following packages to make their contents available.
 
 ```{r message = F}
 # Load packages to be used in this analysis
