@@ -3,6 +3,8 @@
 
 locate_iSTOP <- function(codons, genome) {
 
+  if (nrow(codons) < 1) return(invisible(codons))
+
   no_targetable_codons <- filter(codons,  is.na(genome_coord))
   targetable_codons    <- filter(codons, !is.na(genome_coord))
 

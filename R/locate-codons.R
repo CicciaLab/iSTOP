@@ -91,13 +91,23 @@ locate_codons <- function(cds,
   if (cores <= 1L) cores <- NULL
 
   # Progress bar nonsense
-  pbo <- pbapply::pboptions(type = 'timer', char = '=')
+  pbo <- pbapply::pboptions(type = 'timer', char = '=', min_time = 3)
   on.exit(pbapply::pboptions(pbo), add = TRUE)
 
-  cds %>%
+  result <-
+    cds %>%
     split(.$tx) %>%
     pbapply::pblapply(locate_codons_of_one_tx, genome, codons, positions, switch_strand, cl = cores) %>%
     bind_rows
+
+  if (nrow(result) < 1) {
+    warning('None of the searched CDS sequences met the criteria of:\n',
+         '    1. Begin with ATG\n',
+         '    2. End with TAA|TAG|TGA\n',
+         '    3. Sequence length that is a multiple of 3\n',
+         '    4. No internal in-frame TAA|TAG|TGA\n')
+  }
+  return(result)
 }
 
 
