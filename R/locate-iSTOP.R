@@ -5,10 +5,21 @@ locate_iSTOP <- function(codons, genome) {
 
   if (nrow(codons) < 1) return(invisible(codons))
 
+  codons <-
+    codons %>%
+    group_by(gene) %>%
+    mutate(n_tx_in_gene = length(unique(tx)))
+
   no_targetable_codons <- filter(codons,  is.na(genome_coord))
   targetable_codons    <- filter(codons, !is.na(genome_coord))
 
   targetable_codons %>%
+    group_by(gene, chr, genome_coord) %>%
+    mutate(
+      n_tx = n(),
+      percent_tx = (n() / n_tx_in_gene) * 100
+    ) %>%
+    ungroup %>%
     mutate(
       searched = get_genomic_sequence(at = genome_coord, add_5prime = 150, add_3prime = 150, genome, chr, sg_strand),
       searched =  # Change target 'C' to 'c'
