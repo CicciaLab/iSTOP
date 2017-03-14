@@ -1,6 +1,44 @@
 # iSTOP - an R package for designing induced stop mutants
 
-Introduction...
+
+# Quick usage examples
+
+```{r}
+library(tidyverse)
+library(iSTOP)
+
+# Download CDS coordinates for a genome assembly
+# Be polite to UCSC - avoid repeated downloads!
+CDS_Scerevisiae_UCSC_sacCer3() %>% write_csv('~/Desktop/CDS-Yeast.csv')
+
+# Read your previously saved CDS coordinates
+Yeast_CDS    <- read_csv('~/Desktop/CDS-Yeast.csv')
+Yeast_Genome <- BSgenome.Scerevisiae.UCSC.sacCer3::Scerevisiae
+
+# Detect iSTOP targets for a single gene
+SUS1 <- 
+  Yeast_CDS %>%
+  filter(gene == 'SUS1') %>%
+  locate_codons(Yeast_Genome) %>%
+  locate_iSTOP(Yeast_Genome)
+
+# Detect iSTOP targets for genes that contain "RAD"
+RAD <- 
+  Yeast_CDS %>%
+  filter(grepl('RAD', gene)) %>%
+  locate_codons(Yeast_Genome) %>%
+  locate_iSTOP(Yeast_Genome)
+
+# Detect iSTOP targets for a set of transcript IDs
+SET1 <-
+  Yeast_CDS %>%
+  filter(tx %in% c('YGR248W', 'YER006C-A')) %>%
+  locate_codons(Yeast_Genome) %>%
+  locate_iSTOP(Yeast_Genome)
+
+# Visualize
+# Coming soon!
+```
 
 # Installation
 
@@ -29,7 +67,7 @@ biocLite(c(
 biocLite('ericedwardbryant/iSTOP')
 ```
 
-# An example analysis
+# Detailed usage example
 
 Load the following packages to make their contents available.
 
@@ -123,30 +161,6 @@ Hooray_XY <-
   locate_iSTOP(Genome_Hsapiens_XY)
 ```
 
+# Issues? Requests?
 
-
-## WARNING
-
-I had to re-install from source packages to resolve this error:
-
-```
-Error in c(x, value) : 
-  could not find symbol "recursive" in environment of the generic function
-```
-
-The problem occurs after upgrading to R v3.3.3 due to a problem with the Biostrings Biocunductor package.
-
-Installing R packages from source requires developer tools. 
-
-- On MacOS, run `xcode-select --install` in terminal
-- On Debian/Ubuntu `sudo apt-get install build-essential`
-- On Windows, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/)
-
-Then re-installing the following packages from source resolved the bug. Your mileage may vary!
-
-```{r}
-BiocInstaller::biocLite(
-  c("BiocGenerics", "S4Vectors", "IRanges", "XVector", "Biostrings"), 
-  type = 'source'
-)
-```
+If you have a feature request or have identified an issue, please submit them [here](https://github.com/EricEdwardBryant/iSTOP/issues).
