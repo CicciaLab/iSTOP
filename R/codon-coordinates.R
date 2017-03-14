@@ -36,13 +36,9 @@
 #' will have a separate row for each):
 #'
 #'   - __COLUMN-NAME__ _`DATA-TYPE`_ DESCRIPTION
-#'   - __gene_id__      _`chr`_ Gene identifier
-#'   - __gene__         _`chr`_ Gene symbol
-#'   - __tx_id__        _`int`_ Transcript identifier
 #'   - __tx__           _`chr`_ Transcript symbol
-#'   - __exon_id__      _`int`_ Exon identifier
+#'   - __gene__         _`chr`_ Gene symbol
 #'   - __exon__         _`int`_ Exon rank in gene
-#'   - __ncds__         _`int`_ Exon rank in CDS
 #'   - __pep_length__   _`int`_ Lenth of peptide
 #'   - __cds_length__   _`int`_ Length of CDS DNA
 #'   - __chr__          _`chr`_ Chromosome
@@ -76,10 +72,9 @@ locate_codons <- function(cds,
   message('Locating codon coordinates...')
 
   assert_that(
-    cds %has_name% 'gene',  cds %has_name% 'gene_id', cds %has_name% 'tx',
-    cds %has_name% 'tx_id', cds %has_name% 'exon',    cds %has_name% 'exon_id',
-    cds %has_name% 'ncds',  cds %has_name% 'chr',     cds %has_name% 'strand',
-    cds %has_name% 'start', cds %has_name% 'end',
+    cds %has_name% 'tx',  cds %has_name% 'gene',   cds %has_name% 'exon',
+    cds %has_name% 'chr', cds %has_name% 'strand', cds %has_name% 'start',
+    cds %has_name% 'end',
     length(codons) == length(positions),
     length(codons) == length(switch_strand),
     is_character(codons),
@@ -93,19 +88,15 @@ locate_codons <- function(cds,
     all(cds$chr %in% names(genome))
   )
 
-  # Progress bar multi-core lapply uses an option for cores by default we
-  # utilize this to allow immediate bypass to pblapply in case of 1 core
-  if (cores == 1L) {
-    for_each <- pbapply::pblapply
-  } else {
-    reset <- options(mc.cores = cores)
-    on.exit(options(reset))
-    for_each <- pbmcapply::pbmclapply
-  }
+  if (cores <= 1L) cores <- NULL
+
+  # Progress bar nonsense
+  pbo <- pbapply::pboptions(type = 'timer', char = '=')
+  on.exit(pbapply::pboptions(pbo), add = TRUE)
 
   cds %>%
-    split(.$tx_id) %>%
-    for_each(locate_codons_of_one_tx, genome, codons, positions, switch_strand) %>%
+    split(.$tx) %>%
+    pbapply::pblapply(locate_codons_of_one_tx, genome, codons, positions, switch_strand, cl = cores) %>%
     bind_rows
 }
 
@@ -140,8 +131,7 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
   index_chr     <- with(cds, rep(chr,     times = abs(end - start) + 1))
   index_strand  <- with(cds, rep(strand,  times = abs(end - start) + 1))
   index_exon    <- with(cds, rep(exon,    times = abs(end - start) + 1))
-  index_exon_id <- with(cds, rep(exon_id, times = abs(end - start) + 1))
-  index_ncds    <- with(cds, rep(ncds,    times = abs(end - start) + 1))
+
 
   # Find codon targets
   cds_coord <-
@@ -160,10 +150,8 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
 
   # Construct a basic results data frame
   result <- data_frame(
-    gene_id      = unique(cds$gene_id),
-    gene         = unique(cds$gene),
-    tx_id        = unique(cds$tx_id),
     tx           = unique(cds$tx),
+    gene         = unique(cds$gene),
     cds_length   = nchar(cds_dna),
     pep_length   = as.integer(cds_length / 3)
   )
@@ -176,13 +164,9 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
   # Using genome coordinates of desired base in codon matches to extract nearby sequence
   cds_coord %>%
     mutate(
-      gene_id      = result$gene_id,
-      gene         = result$gene,
-      tx_id        = result$tx_id,
       tx           = result$tx,
-      exon_id      = index_exon_id[cds_coord],
+      gene         = result$gene,
       exon         = index_exon[cds_coord],
-      ncds         = index_ncds[cds_coord],
       pep_length   = result$pep_length,
       cds_length   = result$cds_length,
       chr          = index_chr[cds_coord],    # chr is exon dependent
@@ -192,7 +176,7 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
       genome_coord = index_genome[cds_coord],
       aa_coord     = as.integer(ceiling(cds_coord / 3))
     ) %>%
-    select(gene_id:aa_target, codon, aa_coord, cds_coord, genome_coord) %>%
+    select(tx:aa_target, codon, aa_coord, cds_coord, genome_coord) %>%
     arrange(cds_coord)
 }
 

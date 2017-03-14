@@ -35,13 +35,9 @@ a single targetable coordinate (codons with multiple targetable coordinates
 will have a separate row for each):
 \itemize{
 \item \strong{COLUMN-NAME} \emph{\code{DATA-TYPE}} DESCRIPTION
-\item \strong{gene_id}      \emph{\code{chr}} Gene identifier
-\item \strong{gene}         \emph{\code{chr}} Gene symbol
-\item \strong{tx_id}        \emph{\code{int}} Transcript identifier
 \item \strong{tx}           \emph{\code{chr}} Transcript symbol
-\item \strong{exon_id}      \emph{\code{int}} Exon identifier
+\item \strong{gene}         \emph{\code{chr}} Gene symbol
 \item \strong{exon}         \emph{\code{int}} Exon rank in gene
-\item \strong{ncds}         \emph{\code{int}} Exon rank in CDS
 \item \strong{pep_length}   \emph{\code{int}} Lenth of peptide
 \item \strong{cds_length}   \emph{\code{int}} Length of CDS DNA
 \item \strong{chr}          \emph{\code{chr}} Chromosome
