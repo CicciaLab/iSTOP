@@ -91,7 +91,7 @@ locate_codons <- function(cds,
   if (cores <= 1L) cores <- NULL
 
   # Progress bar nonsense
-  pbo <- pbapply::pboptions(type = 'timer', char = '=', min_time = 3)
+  pbo <- pbapply::pboptions(type = 'timer', char = '=')
   on.exit(pbapply::pboptions(pbo), add = TRUE)
 
   result <-
@@ -167,7 +167,7 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
   )
 
   # Exit if no codons were found
-  if (length(cds_coord) < 1L) {
+  if (nrow(cds_coord) < 1L) {
     return(result) # Will be counted as a valid transcript with no matches
   }
 
