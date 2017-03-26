@@ -50,10 +50,10 @@ BRCA_NGAG    <- BRCA %>% filter(!is.na(sgNGAG))
 # Prepare a second track of annotation
 
 plot_spliced_isoforms(
-  'BRCA1', 
-  BRCA_CDS, 
-  ticks_upper = BRCA_NGG_NGA,
-  ticks_lower = BRCA_NGAG, 
+  gene              = 'BRCA1', 
+  coords            = BRCA_CDS, 
+  ticks_upper       = BRCA_NGG_NGA,
+  ticks_lower       = BRCA_NGAG, 
   ticks_upper_color = 'red', 
   ticks_lower_color = 'blue'
 )
@@ -78,6 +78,8 @@ biocLite(c(
   'assertthat',
   'pbapply',
   'devtools',
+  # Packages from GitHub (github.com)
+  'dgrtwo/fuzzyjoin',
   # Packages from Bioconductor (bioconductor.org)
   'BSgenome',
   'Biostrings',
