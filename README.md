@@ -36,14 +36,11 @@ TP53 <-
   filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4', 'uc002gim.5')) %>%
   locate_codons(Human_Genome) %>%
   locate_iSTOP(Human_Genome)
-
-# Visualize
-plot_spliced_isoforms('BRCA1', Human_CDS, BRCA)
 ```
 
-<img src="https://raw.githubusercontent.com/EricEdwardBryant/iSTOP/master/inst/img/BRCA1-all.png"/>
-
 ``` r
+# Visualize
+
 # Limit isoforms to those validated during codon search
 BRCA_CDS <- Human_CDS %>% filter(tx %in% BRCA$tx)
 
@@ -52,7 +49,14 @@ BRCA_NGG_NGA <- BRCA %>% filter(!is.na(sgNGG) | !is.na(sgNGA))
 BRCA_NGAG    <- BRCA %>% filter(!is.na(sgNGAG))
 # Prepare a second track of annotation
 
-plot_spliced_isoforms('BRCA1', BRCA_CDS, BRCA_NGG_NGA, BRCA_NGAG, ticks_upper_color = 'red', ticks_lower_color = 'blue')
+plot_spliced_isoforms(
+  'BRCA1', 
+  BRCA_CDS, 
+  ticks_upper = BRCA_NGG_NGA,
+  ticks_lower = BRCA_NGAG, 
+  ticks_upper_color = 'red', 
+  ticks_lower_color = 'blue'
+)
 ```
 
 <img src="https://raw.githubusercontent.com/EricEdwardBryant/iSTOP/master/inst/img/BRCA1.png"/>
