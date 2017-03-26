@@ -10,36 +10,52 @@ library(iSTOP)
 
 # Download CDS coordinates for a genome assembly
 # Be polite to UCSC - avoid repeated downloads!
-CDS_Scerevisiae_UCSC_sacCer3() %>% write_csv('~/Desktop/CDS-Yeast.csv')
+CDS_Hsapiens_UCSC_hg38() %>% write_csv('~/Desktop/CDS-Human.csv')
 
-# Read your previously saved CDS coordinates
-Yeast_CDS    <- read_csv('~/Desktop/CDS-Yeast.csv')
-Yeast_Genome <- BSgenome.Scerevisiae.UCSC.sacCer3::Scerevisiae
+# Read your previously saved CDS coordinates and prepare your genome
+Human_CDS    <- read_csv('~/Desktop/CDS-Human.csv')
+Human_Genome <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
 
 # Detect iSTOP targets for a single gene
-SUS1 <- 
-  Yeast_CDS %>%
-  filter(gene == 'SUS1') %>%
-  locate_codons(Yeast_Genome) %>%
-  locate_iSTOP(Yeast_Genome)
+BRCA1 <- 
+  Human_CDS %>%
+  filter(gene == 'BRCA1') %>%
+  locate_codons(Human_Genome) %>%
+  locate_iSTOP(Human_Genome)
 
-# Detect iSTOP targets for genes that contain "RAD"
-RAD <- 
-  Yeast_CDS %>%
-  filter(grepl('RAD', gene)) %>%
-  locate_codons(Yeast_Genome) %>%
-  locate_iSTOP(Yeast_Genome)
+# Detect iSTOP targets for genes that contain "BRCA"
+BRCA <-
+  Human_CDS %>%
+  filter(grepl('BRCA', gene)) %>%
+  locate_codons(Human_Genome) %>%
+  locate_iSTOP(Human_Genome)
 
 # Detect iSTOP targets for a set of transcript IDs
-SET1 <-
-  Yeast_CDS %>%
-  filter(tx %in% c('YGR248W', 'YER006C-A')) %>%
-  locate_codons(Yeast_Genome) %>%
-  locate_iSTOP(Yeast_Genome)
+TP53 <-
+  Human_CDS %>%
+  filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4', 'uc002gim.5')) %>%
+  locate_codons(Human_Genome) %>%
+  locate_iSTOP(Human_Genome)
 
 # Visualize
-# Coming soon!
+plot_spliced_isoforms('BRCA1', Human_CDS, BRCA)
 ```
+
+![BRCA1](BRCA1-all.pdf)
+
+``` r
+# Limit isoforms to those validated during codon search
+BRCA_CDS <- Human_CDS %>% filter(tx %in% BRCA$tx)
+
+# Annotate only sites with NGG or NGA PAM
+BRCA_NGG_NGA <- BRCA %>% filter(!is.na(sgNGG) | !is.na(sgNGA))
+BRCA_NGAG    <- BRCA %>% filter(!is.na(sgNGAG))
+# Prepare a second track of annotation
+
+plot_spliced_isoforms('BRCA1', BRCA_CDS, BRCA_NGG_NGA, BRCA_NGAG, ticks_upper_color = 'red', ticks_lower_color = 'blue')
+```
+
+![BRCA1](BRCA1.pdf)
 
 Installation
 ============
