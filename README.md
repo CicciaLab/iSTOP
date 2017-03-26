@@ -38,9 +38,10 @@ TP53 <-
   locate_iSTOP(Human_Genome)
 ```
 
-``` r
-# Visualize
+Visualize iSTOP coordinates
+---------------------------
 
+``` r
 # Limit isoforms to those validated during codon search
 BRCA_CDS <- Human_CDS %>% filter(tx %in% BRCA$tx)
 
