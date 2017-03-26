@@ -17,10 +17,13 @@ Import:
   stringr,
   purrr,
   tibble,
-  AnnotationDbi,
+  tidyr,
   BSgenome,
   Biostrings,
   pbapply,
   pbmcapply
 Suggests:
-  tidyverse
+  tidyverse,
+  knitr,
+  rmarkdown,
+  roxygen2
