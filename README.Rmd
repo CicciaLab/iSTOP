@@ -50,7 +50,7 @@ TP53 <-
 plot_spliced_isoforms('BRCA1', Human_CDS, BRCA)
 ```
 
-![BRCA1](BRCA1-all.pdf)
+![BRCA1](inst/img/BRCA1-all.pdf)
 
 ```{r}
 # Limit isoforms to those validated during codon search
@@ -64,7 +64,7 @@ BRCA_NGAG    <- BRCA %>% filter(!is.na(sgNGAG))
 plot_spliced_isoforms('BRCA1', BRCA_CDS, BRCA_NGG_NGA, BRCA_NGAG, ticks_upper_color = 'red', ticks_lower_color = 'blue')
 ```
 
-![BRCA1](BRCA1.pdf)
+![BRCA1](inst/img/BRCA1.pdf)
 
 # Installation
 
