@@ -27,7 +27,7 @@ targeted with iSTOP.}
 \code{codon} is targeted on the opposite strand. Determines the resulting value of
 \code{sg_strand}. Should be the same length as \code{codons}. Defaults to \code{c(F, F, F, T, T)}}
 
-\item{cores}{Number of cores to use for parallel processing with \link[pbmcapply:pbmclapply]{pbmclapply}}
+\item{cores}{Number of cores to use for parallel processing with \link[pbapply:pblapply]{pblapply}}
 }
 \value{
 A data.frame with the following columns where each row represents

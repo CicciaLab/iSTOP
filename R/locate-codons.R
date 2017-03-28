@@ -18,7 +18,7 @@
 #' @param switch_strand A logical vector indicating whether the corresponding
 #' `codon` is targeted on the opposite strand. Determines the resulting value of
 #' `sg_strand`. Should be the same length as `codons`. Defaults to `c(F, F, F, T, T)`
-#' @param cores Number of cores to use for parallel processing with [pbmclapply][pbmcapply::pbmclapply]
+#' @param cores Number of cores to use for parallel processing with [pblapply][pbapply::pblapply]
 #'
 #' @details Each transcript is processed independently based on the `tx_id`
 #' column of the `cds` data.frame.
@@ -57,7 +57,6 @@
 #' @importFrom tibble data_frame lst
 #' @importFrom BSgenome getSeq
 #' @importFrom Biostrings DNAStringSet translate
-#' @importFrom pbmcapply pbmclapply
 #' @importFrom pbapply pblapply
 #' @export
 #' @md
