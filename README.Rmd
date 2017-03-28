@@ -86,7 +86,7 @@ biocLite(c(
   'assertthat',
   'pbapply',
   'devtools',
-  # Packages from GitHub (github.com)
+  # Packages from GitHub (github.com) (development version with genome_*_join)
   'dgrtwo/fuzzyjoin',
   # Packages from Bioconductor (bioconductor.org)
   'BSgenome',
