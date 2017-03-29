@@ -4,7 +4,7 @@
 \alias{add_RFLP}
 \title{Add RFLP enzymes to iSTOP data}
 \usage{
-add_RFLP(iSTOP, width, enzymes = NULL, cores)
+add_RFLP(iSTOP, width = 150, enzymes = NULL, cores = 1)
 }
 \description{
 Add RFLP enzymes to iSTOP data

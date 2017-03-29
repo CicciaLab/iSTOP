@@ -21,6 +21,9 @@ library(iSTOP)
 # Be polite to UCSC - avoid repeated downloads!
 CDS_Hsapiens_UCSC_hg38() %>% write_csv('~/Desktop/CDS-Human.csv')
 
+# Install the human genome (only need to do this once!)
+BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
+
 # Read your previously saved CDS coordinates and prepare your genome
 Human_CDS    <- read_csv('~/Desktop/CDS-Human.csv')
 Human_Genome <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
@@ -39,12 +42,13 @@ BRCA <-
   locate_codons(Human_Genome) %>%
   locate_iSTOP(Human_Genome)
 
-# Detect iSTOP targets for a set of transcript IDs
+# Detect iSTOP targets for a set of transcript IDs and add RFLP
 TP53 <-
   Human_CDS %>%
   filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4', 'uc002gim.5')) %>%
   locate_codons(Human_Genome) %>%
-  locate_iSTOP(Human_Genome)
+  locate_iSTOP(Human_Genome) %>%
+  add_RFLP
 ```
 
 ## Visualize iSTOP coordinates

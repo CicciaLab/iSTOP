@@ -13,7 +13,7 @@
 #' @importFrom purrr pmap map_int map_chr map2 map
 #' @md
 
-add_RFLP <- function(iSTOP, width, enzymes = NULL, cores) {
+add_RFLP <- function(iSTOP, width = 150, enzymes = NULL, cores = 1) {
 
   if (is.null(enzymes)) {
   enzymes <-
@@ -38,6 +38,12 @@ add_RFLP <- function(iSTOP, width, enzymes = NULL, cores) {
     filter(!str_detect(pattern, '\\[cT\\]|\\[AcT\\]|\\[cGT\\]')) %>%
     select(enzyme, pattern) %>%
     distinct
+
+  if (cores <= 1L) cores <- NULL
+
+  # Progress bar nonsense
+  pbo <- pbapply::pboptions(type = 'timer', char = '=')
+  on.exit(pbapply::pboptions(pbo), add = TRUE)
 
   iSTOP %>%
     split(.$chr) %>%
