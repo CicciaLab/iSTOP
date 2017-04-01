@@ -15,7 +15,7 @@
 
 add_RFLP <- function(iSTOP, width = 150, enzymes = NULL, cores = 1) {
 
-  message('Adding RFLP')
+  message('Adding RFLP...')
 
   if (is.null(enzymes)) {
   enzymes <-

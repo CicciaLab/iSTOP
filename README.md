@@ -51,10 +51,10 @@ You can plot as many tracks as you like (though any more than 4 becomes difficul
 ``` r
 plot_spliced_isoforms(
   gene    = 'BRCA1', 
-  coords  = filter(Human_CDS, tx %in% BRCA$tx),    # Limit isoforms to those validated during codon search
-  colors  = c('red', 'black'),                     # Hex colors are also valid (e.g. #8bca9d)
-  NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)), # Track 1  `|` means "or"
-  RFLP    = filter(BRCA, has(RFLP_150))            # Track 2
+  coords  = filter(Human_CDS, tx %in% BRCA$tx),      # Limit isoforms to those validated during codon search
+  colors  = c('red', 'black'),                       # Hex colors are also valid (e.g. #8bca9d)
+  NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)),   # Track 1  `|` means "or"
+  RFLP    = filter(BRCA, match_any  & has(RFLP_150)) # Track 2
 )
 ```
 

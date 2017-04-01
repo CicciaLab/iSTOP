@@ -10,64 +10,6 @@ knitr::opts_chunk$set(eval = F)
 
 # iSTOP - an R package for designing induced stop mutants
 
-
-# Quick usage examples
-
-```{r}
-library(tidyverse)
-library(iSTOP)
-
-# Download CDS coordinates for a genome assembly
-# Be polite to UCSC - avoid repeated downloads!
-CDS_Hsapiens_UCSC_hg38() %>% write_csv('~/Desktop/CDS-Human.csv')
-
-# Install the human genome (only need to do this once!)
-BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
-
-# Read your previously saved CDS coordinates and prepare your genome
-Human_CDS    <- read_csv('~/Desktop/CDS-Human.csv')
-Human_Genome <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
-
-# Detect iSTOP targets for a single gene
-BRCA1 <- 
-  Human_CDS %>%
-  filter(gene == 'BRCA1') %>%
-  locate_codons(Human_Genome) %>%
-  locate_iSTOP(Human_Genome)
-
-# Detect iSTOP targets for genes that contain "BRCA" and add RFLp
-BRCA <-
-  Human_CDS %>%
-  filter(grepl('BRCA', gene)) %>%
-  locate_codons(Human_Genome) %>%
-  locate_iSTOP(Human_Genome) %>%
-  add_RFLP
-  
-# Detect iSTOP targets for a set of transcript IDs and add RFLP
-TP53 <-
-  Human_CDS %>%
-  filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4', 'uc002gim.5')) %>%
-  locate_codons(Human_Genome) %>%
-  locate_iSTOP(Human_Genome) %>%
-  add_RFLP
-```
-
-## Visualize iSTOP coordinates
-
-You can plot as many tracks as you like (though any more than 4 becomes difficult to read).
-
-```{r}
-plot_spliced_isoforms(
-  gene    = 'BRCA1', 
-  coords  = filter(Human_CDS, tx %in% BRCA$tx),    # Limit isoforms to those validated during codon search
-  colors  = c('red', 'black'),                     # Hex colors are also valid (e.g. #8bca9d)
-  NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)), # Track 1  `|` means "or"
-  RFLP    = filter(BRCA, has(RFLP_150))            # Track 2
-)
-```
-
-<img src="https://raw.githubusercontent.com/EricEdwardBryant/iSTOP/master/inst/img/BRCA1.png"/>
-
 # Installation
 
 First, instal [R](https://cran.r-project.org). Installing [RStudio](https://www.rstudio.com/products/rstudio/download/) is also recommended. Once installed, open RStudio and run the following commands in the console to install all necessary R packages.
@@ -94,7 +36,67 @@ biocLite(c(
 
 # If all went well, install the iSTOP package hosted on GitHub
 biocLite('ericedwardbryant/iSTOP')
+
+# Now install a genome - e.g. for Human:
+BSgenome::available.genomes() # To see what is conveniently available  
+BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
+
+# And download CDS coordinates for a genome assembly
+# Be polite to UCSC - avoid repeated downloads!
+CDS_Hsapiens_UCSC_hg38() %>% write_csv('~/Desktop/CDS-Human.csv')
 ```
+
+# Quick usage examples
+
+```{r}
+library(tidyverse)
+library(iSTOP)
+
+# Read your previously saved CDS coordinates and prepare your genome
+CDS_Human <- read_csv('~/Desktop/CDS-Human.csv')
+Genome    <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
+
+# Detect iSTOP targets for a single gene
+BRCA1 <- 
+  CDS_Human %>%
+  filter(gene == 'BRCA1') %>%
+  locate_codons(Genome) %>%
+  locate_iSTOP(Genome) %>%
+  add_RFLP
+
+# Detect iSTOP targets for genes that contain "BRCA" and add RFLP
+BRCA <-
+  CDS_Human %>%
+  filter(grepl('BRCA', gene)) %>%
+  locate_codons(Genome) %>%
+  locate_iSTOP(Genome) %>%
+  add_RFLP
+  
+# Detect iSTOP targets for a set of transcript IDs and add RFLP
+TP53 <-
+  CDS_Human %>%
+  filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4', 'uc002gim.5')) %>%
+  locate_codons(Genome) %>%
+  locate_iSTOP(Genome) %>%
+  add_RFLP
+```
+
+## Visualize iSTOP coordinates
+
+You can plot as many tracks as you like (though any more than 4 becomes difficult to read).
+
+```{r}
+plot_spliced_isoforms(
+  gene    = 'BRCA1', 
+  coords  = filter(CDS_Human, tx %in% BRCA$tx),      # Limit isoforms to those validated during codon search
+  colors  = c('red', 'black'),                       # Hex colors are also valid (e.g. #8bca9d)
+  NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)),   # Track 1  `|` = "or"
+  RFLP    = filter(BRCA, match_any  & has(RFLP_150)) # Track 2  `&` = "and"
+)
+```
+
+<img src="https://raw.githubusercontent.com/EricEdwardBryant/iSTOP/master/inst/img/BRCA1.png"/>
+
 
 # Detailed usage example
 
@@ -125,17 +127,17 @@ This gene has a single transcript "YMR201C" which is encoded on the "-" strand a
 The `CDS` function will generate a CDS table from annotation tables provided by the UCSC genome browser. Type `?CDS` in the R console to view the documentation of this function. Note that the documentation for `CDS` lists several pre-defined functions to access complete CDS coordinates for a given species and genome assembly. The example below will download and construct a CDS coordinates table for the Human genome hg38 assembly. Note that only exons that contain coding sequence are retained, hence some transcripts not having coordinates for e.g. exon #1.
 
 ```{r message = FALSE}
-CDS_Hsapiens <- CDS_Hsapiens_UCSC_hg38()
+CDS_Human <- CDS_Hsapiens_UCSC_hg38()
 ```
 
 Please be polite to UCSC by limiting the number of times you download their annotation files. I recommend saving the CDS coordinates locally by writing them to a CSV file. For example:
 
 ```{r}
 # You probably should pick a different location than the desktop...
-CDS_Hsapiens %>% write_csv('~/Desktop/CDS-Hsapiens.csv')
+CDS_Human %>% write_csv('~/Desktop/CDS-Hsapiens.csv')
 
 # Then anytime you want to look up iSTOP targets, begin by reading this file
-CDS_Hsapiens <- read_csv('~/Desktop/CDS-Hsapiens.csv')
+CDS_Human <- read_csv('~/Desktop/CDS-Hsapiens.csv')
 ```
 
 Other pre-defined CDS functions include:
@@ -165,7 +167,7 @@ BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
 Once installed we can access the genome object like so:
 
 ```{r}
-Genome_Hsapiens <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
+Genome_Human <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
 ```
 
 ### Or, using fasta sequence files
@@ -174,7 +176,7 @@ Alternatively, you can construct a genome manually from a set of fasta files. Ju
 
 ```{r}
 # Build custom genome of Human chromosomes X and Y
-Genome_Hsapiens_XY <- Biostrings::readDNAStringSet(
+Genome_Human_XY <- Biostrings::readDNAStringSet(
   c('http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrX.fa.gz',
     'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrY.fa.gz'))
 ```
@@ -184,20 +186,20 @@ Genome_Hsapiens_XY <- Biostrings::readDNAStringSet(
 ```{r}
 # I will be limiting this analysis to chromosomes X and Y
 Hooray <-
-  CDS_Hsapiens %>%
+  CDS_Human %>%
   filter(chr %in% c('chrX', 'chrY')) %>%
-  locate_codons(Genome_Hsapiens) %>%
-  locate_iSTOP(Genome_Hsapiens)
+  locate_codons(Genome_Human) %>%
+  locate_iSTOP(Genome_Human)
 ```
 
 ```{r}
 # This analysis will be limited to PLCXD1 and uses the FASTA sequences
 # Note that using FASTA sequences is MUCH slower than using a BSgenome
 Hooray_XY <-
-  CDS_Hsapiens %>%
+  CDS_Human %>%
   filter(gene == 'PLCXD1') %>%
-  locate_codons(Genome_Hsapiens_XY) %>%
-  locate_iSTOP(Genome_Hsapiens_XY)
+  locate_codons(Genome_Human_XY) %>%
+  locate_iSTOP(Genome_Human_XY)
 ```
 
 # Issues? Requests?
