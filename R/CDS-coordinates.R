@@ -279,8 +279,6 @@ CDS_from_Bioconductor <- function(txdb, orgdb,
 
 # ---- Utilities for CDS_from_Bioconductor ----
 
-'%||%' <- function(lhs, rhs) if (length(lhs)) lhs else rhs
-
 # Get a data frame of gene IDs and gene symbols. If gene ID maps to multiple
 # symbols, symbols will be collapsed into a single string with each symbol
 # separated with ' | '.
