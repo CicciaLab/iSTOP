@@ -35,7 +35,8 @@ BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
 
 # And download CDS coordinates for a genome assembly
 # Be polite to UCSC - avoid repeated downloads!
-CDS_Hsapiens_UCSC_hg38() %>% write_csv('~/Desktop/CDS-Human.csv')
+CDS_hg38 <- CDS_Hsapiens_UCSC_hg38() 
+readr::write_csv(CDS_hg38, '~/Desktop/CDS-Human.csv')
 ```
 
 Quick usage examples
