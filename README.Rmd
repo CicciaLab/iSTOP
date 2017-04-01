@@ -165,7 +165,7 @@ Pre-built genome sequence packages are provided by Bioconductor as "BSgenome" pa
 BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
 ```
 
-Once installed we can access the genome object like so:
+Once installed we can access the genome object like so (Hint - type `bsg` then use RStudio's autocomplete to save some typing):
 
 ```{r}
 Genome_Human <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
@@ -173,7 +173,7 @@ Genome_Human <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
 
 ### Or, using fasta sequence files
 
-Alternatively, you can construct a genome manually from a set of fasta files. Just make sure that the sequence names match those in the `chr` column of your CDS coordinates table and that the CDS coordinates are compatible with these sequences. This is not the recommended approach as sequence lookups are slower, but if this is an option if you are in a pinch!
+Alternatively, you can construct a genome manually from a set of fasta files. Just make sure that the sequence names match those in the `chr` column of your CDS coordinates table and that the CDS coordinates are compatible with these sequences. This is not the recommended approach as sequence lookups are slower, but this is an option if you are in a pinch!
 
 ```{r}
 # Build custom genome of Human chromosomes X and Y
