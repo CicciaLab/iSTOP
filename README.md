@@ -26,13 +26,14 @@ BRCA1 <-
   locate_codons(Human_Genome) %>%
   locate_iSTOP(Human_Genome)
 
-# Detect iSTOP targets for genes that contain "BRCA"
+# Detect iSTOP targets for genes that contain "BRCA" and add RFLp
 BRCA <-
   Human_CDS %>%
   filter(grepl('BRCA', gene)) %>%
   locate_codons(Human_Genome) %>%
-  locate_iSTOP(Human_Genome)
-
+  locate_iSTOP(Human_Genome) %>%
+  add_RFLP
+  
 # Detect iSTOP targets for a set of transcript IDs and add RFLP
 TP53 <-
   Human_CDS %>%
@@ -45,22 +46,15 @@ TP53 <-
 Visualize iSTOP coordinates
 ---------------------------
 
+You can plot as many tracks as you like (though any more than 4 becomes difficult to read).
+
 ``` r
-# Limit isoforms to those validated during codon search
-BRCA_CDS <- Human_CDS %>% filter(tx %in% BRCA$tx)
-
-# Annotate only sites with NGG or NGA PAM
-BRCA_NGG_NGA <- BRCA %>% filter(!is.na(sgNGG) | !is.na(sgNGA))
-BRCA_NGAG    <- BRCA %>% filter(!is.na(sgNGAG))
-# Prepare a second track of annotation
-
 plot_spliced_isoforms(
-  gene              = 'BRCA1', 
-  coords            = BRCA_CDS, 
-  ticks_upper       = BRCA_NGG_NGA,
-  ticks_lower       = BRCA_NGAG, 
-  ticks_upper_color = 'red', 
-  ticks_lower_color = 'blue'
+  gene    = 'BRCA1', 
+  coords  = filter(Human_CDS, tx %in% BRCA$tx),    # Limit isoforms to those validated during codon search
+  colors  = c('red', 'black'),                     # Hex colors are also valid (e.g. #8bca9d)
+  NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)), # Track 1  `|` means "or"
+  RFLP    = filter(BRCA, has(RFLP_150))            # Track 2
 )
 ```
 

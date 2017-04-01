@@ -4,22 +4,17 @@
 \alias{plot_spliced_isoforms}
 \title{Plot spliced isoforms}
 \usage{
-plot_spliced_isoforms(gene, coords, ticks_lower = NULL, ticks_upper = NULL,
-  ticks_lower_color = "black", ticks_upper_color = "red")
+plot_spliced_isoforms(gene, coords, colors = NULL, ...)
 }
 \arguments{
 \item{gene}{A single gene name}
 
 \item{coords}{A dataframe of \link[=CDS]{CDS coordinates} (will be filtered for \code{gene})}
 
-\item{ticks_lower}{A dataframe of chromosome coordinates (see Details)}
+\item{colors}{A character vector of colors to be applied to each track}
 
-\item{ticks_upper}{A dataframe of chromosome coordinates (see Details)}
+\item{...}{Tracks. Each track must be a dataframe with two columns - \code{gene} and \code{genome_coord}.}
 }
 \description{
 Plot spliced isoforms
-}
-\details{
-Chromosome coordinate dataframes must have two columns named \code{gene}, and \code{genome_coord}
-which correspond to gene name and genome coordinate values.
 }
