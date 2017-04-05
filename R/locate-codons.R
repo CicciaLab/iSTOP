@@ -140,7 +140,7 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
   index_chr     <- with(cds, rep(chr,     times = abs(end - start) + 1))
   index_strand  <- with(cds, rep(strand,  times = abs(end - start) + 1))
   index_exon    <- with(cds, rep(exon,    times = abs(end - start) + 1))
-
+  NMD_boundary  <- which(index_exon == max(index_exon))[1] - 56
 
   # Find codon targets
   cds_coord <-
@@ -183,9 +183,10 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
       sg_strand    = ifelse(switch_strand, opposite[strand], strand),
       aa_target    = codon %>% Biostrings::DNAStringSet() %>% Biostrings::translate() %>% as.character,
       genome_coord = index_genome[cds_coord],
-      aa_coord     = as.integer(ceiling(cds_coord / 3))
+      aa_coord     = as.integer(ceiling(cds_coord / 3)),
+      NMD_pred     = cds_coord > NMD_boundary
     ) %>%
-    select(tx:aa_target, codon, aa_coord, cds_coord, genome_coord) %>%
+    select(tx:aa_target, codon, aa_coord, cds_coord, genome_coord, NMD_pred) %>%
     arrange(cds_coord)
 }
 
