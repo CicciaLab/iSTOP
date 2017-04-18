@@ -1,7 +1,7 @@
 # ---- Locate iSTOP ----
 #' @export
 
-locate_iSTOP <- function(codons, genome) {
+locate_PAM <- function(codons, genome) {
 
   if (nrow(codons) < 1) return(invisible(codons))
 
@@ -28,14 +28,14 @@ locate_iSTOP <- function(codons, genome) {
           str_sub(searched, start = 151, end = 151) %>% str_to_lower, # C -> c
           str_sub(searched, start = 152)                              # RHS
         ),
-      #sgNG     = iSTOP(searched, PAM = 'G  ',          base_edit = 'c', spacing = c(12, 16), width = 22),
-      sgNGG     = iSTOP(searched, PAM = '.GG',          base_edit = 'c', spacing = c(12, 16), width = 23),
-      sgNGA     = iSTOP(searched, PAM = '.GA',          base_edit = 'c', spacing = c(12, 16), width = 23),
-      #sgNGNG   = iSTOP(searched, PAM = '.G.G',         base_edit = 'c', spacing = c(12, 16), width = 24),
-      sgNGCG    = iSTOP(searched, PAM = '.GCG',         base_edit = 'c', spacing = c(12, 16), width = 24),
-      sgNGAG    = iSTOP(searched, PAM = '.GAG',         base_edit = 'c', spacing = c(12, 16), width = 24),
-      sgNNGRRT  = iSTOP(searched, PAM = '..G[AG][AG]T', base_edit = 'c', spacing = c(12, 16), width = 26),
-      sgNNNRRT  = iSTOP(searched, PAM = '...[AG][AG]T', base_edit = 'c', spacing = c(12, 16), width = 26),
+      #sgNG     = PAM(searched, pattern = 'G  ',          base_edit = 'c', spacing = c(12, 16), width = 22),
+      sgNGG     = PAM(searched, pattern = '.GG',          base_edit = 'c', spacing = c(12, 16), width = 23),
+      sgNGA     = PAM(searched, pattern = '.GA',          base_edit = 'c', spacing = c(12, 16), width = 23),
+      #sgNGNG   = PAM(searched, pattern = '.G.G',         base_edit = 'c', spacing = c(12, 16), width = 24),
+      sgNGCG    = PAM(searched, pattern = '.GCG',         base_edit = 'c', spacing = c(12, 16), width = 24),
+      sgNGAG    = PAM(searched, pattern = '.GAG',         base_edit = 'c', spacing = c(12, 16), width = 24),
+      sgNNGRRT  = PAM(searched, pattern = '..G[AG][AG]T', base_edit = 'c', spacing = c(12, 16), width = 26),
+      sgNNNRRT  = PAM(searched, pattern = '...[AG][AG]T', base_edit = 'c', spacing = c(12, 16), width = 26),
       match_any =
         #!is.na(sgNG)    |
         !is.na(sgNGG)    |
@@ -50,9 +50,9 @@ locate_iSTOP <- function(codons, genome) {
 }
 
 # Spacing is number of bases between edited base and PAM
-iSTOP <- function(sequence, PAM, base_edit, spacing, width) {
+PAM <- function(sequence, pattern, base_edit, spacing, width) {
 
-  pattern <- str_c(base_edit, '.{', spacing[1], ',', spacing[2], '}', PAM)
+  pattern <- str_c(base_edit, '.{', spacing[1], ',', spacing[2], '}', pattern)
 
   (str_locate(sequence, pattern)[,'end']) %>%
     str_sub(string = sequence, start = . - (width - 1), end = .)

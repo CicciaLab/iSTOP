@@ -59,7 +59,7 @@ The following code demonstrates three common use cases, detecting iSTOP targets 
 
 1. Choose the CDS coordinates for the transcripts we are interested in using `filter`. Remove this step to search for all transcripts in your CDS coordinates table.
 2. Locate iSTOP codons (CAA, CAG, CGA, and TGG) in these transcripts using `locate_codons`.
-3. Determine whether the codon has an available PAM using `locate_iSTOP`. 
+3. Determine whether the codon has an available PAM using `locate_PAM`. 
 4. Annotate all targeted sites with enzymes that cut uniquely +/- 150 bases using `add_RFLP`. Remove this step to reduce processing time.
 
 ```{r}
@@ -75,7 +75,7 @@ BRCA1 <-
   CDS_Human %>%
   filter(gene == 'BRCA1') %>%
   locate_codons(Genome) %>%
-  locate_iSTOP(Genome) %>%
+  locate_PAM(Genome) %>%
   add_RFLP(width = 150)  # 150 is the maximum allowed
 
 # (2) Detect iSTOP targets for genes that contain the string "BRCA"
@@ -83,7 +83,7 @@ BRCA <-
   CDS_Human %>%
   filter(grepl('BRCA', gene)) %>%
   locate_codons(Genome) %>%
-  locate_iSTOP(Genome) %>%
+  locate_PAM(Genome) %>%
   add_RFLP(width = 150)
   
 # (3) Detect iSTOP targets for a set of transcript IDs
@@ -91,7 +91,7 @@ TP53 <-
   CDS_Human %>%
   filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4')) %>%
   locate_codons(Genome) %>%
-  locate_iSTOP(Genome) %>%
+  locate_PAM(Genome) %>%
   add_RFLP(width = 150)
 ```
 
@@ -205,7 +205,7 @@ Hooray <-
   CDS_Human %>%
   filter(chr %in% c('chrX', 'chrY')) %>%
   locate_codons(Genome_Human) %>%
-  locate_iSTOP(Genome_Human)
+  locate_PAM(Genome_Human)
 ```
 
 ```{r}
@@ -215,7 +215,7 @@ Hooray_XY <-
   CDS_Human %>%
   filter(gene == 'PLCXD1') %>%
   locate_codons(Genome_Human_XY) %>%
-  locate_iSTOP(Genome_Human_XY)
+  locate_PAM(Genome_Human_XY)
 ```
 
 # Issues? Requests?
