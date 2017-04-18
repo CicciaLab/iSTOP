@@ -1,8 +1,19 @@
 # ---- Locate iSTOP ----
 #' @export
 
-locate_PAM <- function(codons, genome) {
+locate_PAM <- function(codons,
+                       genome,
+                       spacing = c(12, 16),
+                       PAM = c(sgNGG    = '.GG',
+                               sgNGA    = '.GA',
+                               sgNGCG   = '.GCG',
+                               sgNGAG   = '.GAG',
+                               sgNNGRRT = '..G[AG][AG]T',
+                               sgNNNRRT = '...[AG][AG]T'),
+                       PAM_widths = c(3, 3, 4, 4, 6, 6),
+                       flanking = 150) {
 
+  assert_that(length(PAM) == length(PAM_widths))
   if (nrow(codons) < 1) return(invisible(codons))
 
   codons <-
@@ -13,7 +24,9 @@ locate_PAM <- function(codons, genome) {
   no_targetable_codons <- filter(codons,  is.na(genome_coord))
   targetable_codons    <- filter(codons, !is.na(genome_coord))
 
-  targetable_codons %>%
+  sequences <-
+    targetable_codons %>%
+    # Determine number of targeted transcripts at each coordinate
     group_by(gene, chr, genome_coord) %>%
     mutate(
       n_tx = n(),
@@ -21,39 +34,37 @@ locate_PAM <- function(codons, genome) {
     ) %>%
     ungroup %>%
     mutate(
-      searched = get_genomic_sequence(at = genome_coord, add_5prime = 150, add_3prime = 150, genome, chr, sg_strand),
-      searched =  # Change target 'C' to 'c'
-        str_c(
-          str_sub(searched, end   = 150),                             # LHS
-          str_sub(searched, start = 151, end = 151) %>% str_to_lower, # C -> c
-          str_sub(searched, start = 152)                              # RHS
-        ),
-      #sgNG     = PAM(searched, pattern = 'G  ',          base_edit = 'c', spacing = c(12, 16), width = 22),
-      sgNGG     = PAM(searched, pattern = '.GG',          base_edit = 'c', spacing = c(12, 16), width = 23),
-      sgNGA     = PAM(searched, pattern = '.GA',          base_edit = 'c', spacing = c(12, 16), width = 23),
-      #sgNGNG   = PAM(searched, pattern = '.G.G',         base_edit = 'c', spacing = c(12, 16), width = 24),
-      sgNGCG    = PAM(searched, pattern = '.GCG',         base_edit = 'c', spacing = c(12, 16), width = 24),
-      sgNGAG    = PAM(searched, pattern = '.GAG',         base_edit = 'c', spacing = c(12, 16), width = 24),
-      sgNNGRRT  = PAM(searched, pattern = '..G[AG][AG]T', base_edit = 'c', spacing = c(12, 16), width = 26),
-      sgNNNRRT  = PAM(searched, pattern = '...[AG][AG]T', base_edit = 'c', spacing = c(12, 16), width = 26),
-      match_any =
-        #!is.na(sgNG)    |
-        !is.na(sgNGG)    |
-        !is.na(sgNGA)    |
-        #!is.na(sgNGNG)  |
-        !is.na(sgNGCG)   |
-        !is.na(sgNGAG)   |
-        !is.na(sgNNGRRT) |
-        !is.na(sgNNNRRT)
-    ) %>%
-    bind_rows(no_targetable_codons)
+      # Get flanking genomic sequence context
+      searched = get_genomic_sequence(
+        at = genome_coord,
+        add_5prime = flanking,
+        add_3prime = flanking,
+        genome,
+        chr,
+        sg_strand
+      ),
+      # make targeted base lower case
+      searched =  str_c(
+        str_sub(searched, end   = flanking),                                          # LHS
+        str_sub(searched, start = flanking + 1, end = flanking + 1) %>% str_to_lower, # C -> c
+        str_sub(searched, start = flanking + 2)                                       # RHS
+      )
+    )
+
+  # Add an sgSTOP column for each PAM
+  for (i in 1:length(PAM)) {
+    sequences[[names(PAM)[i]]] <- sgSTOP(sequences$searched, pattern = PAM[i], base_edit = 'c', spacing = spacing, width = 20 + PAM_widths[i])
+  }
+
+  # If not all of the PAM columns are NA then there is at least 1 match
+  sequences$match_any <- !apply(apply(sequences[, names(PAM)], 2, is.na), 1, all)
+
+  bind_rows(sequences, no_targetable_codons)
 }
 
 # Spacing is number of bases between edited base and PAM
-PAM <- function(sequence, pattern, base_edit, spacing, width) {
-
-  pattern <- str_c(base_edit, '.{', spacing[1], ',', spacing[2], '}', pattern)
-
-  (str_locate(sequence, pattern)[,'end']) %>%
-    str_sub(string = sequence, start = . - (width - 1), end = .)
+sgSTOP <- function(sequence, pattern, base_edit, spacing, width) {
+  regex  <- str_c(base_edit, '.{', spacing[1], ',', spacing[2], '}', pattern) # construct search pattern
+  coords <- str_locate(sequence, regex)[,'end']
+  return(str_sub(sequence, start = coords - (width - 1), end = coords))
 }
