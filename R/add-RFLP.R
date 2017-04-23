@@ -1,6 +1,11 @@
 # ---- RFLP ----
 #' Add RFLP enzymes to iSTOP data
 #'
+#' @param iSTOP A dataframe resulting from [locate_PAM].
+#' @param width An integer specifiying range of unique cutting.
+#' @param enzymes A dataframe of enzymes considered. Defaults to NULL which will
+#' use an enzyme dataset included in the iSTOP package.
+#' @param cores Number of cores to use with [pbapply][pblapply]
 #'
 #' @details This function only works if changed base can be distinguished. Current strategy
 #' is to mark the changed base by converting it to lower case, and constructing
@@ -8,7 +13,6 @@
 #' See `enzymes` definition below for more information.
 #'
 #' @export
-#' @importFrom readr read_csv
 #' @importFrom tidyr gather unnest
 #' @importFrom purrr pmap map_int map_chr map2 map
 #' @md
@@ -60,6 +64,12 @@ add_RFLP <- function(iSTOP, width = 150, enzymes = NULL, cores = 1) {
 
 
 identify_RFLP_enzymes <- function(seqs, enzymes) {
+  # The basic pattern probably should do a 0 width look ahead because we want to match possible
+  # overlapping recognition sites, if enzyme cuts twice with an overlapping recognition
+  # sequence we will exclude it since it complicates the assay. A better strategy might
+  # be to make the expected sequence change and check for 1 cut in unmodified region
+  # Then check for no-cut after expected modification
+  #basic <- enzymes %>% mutate(pattern = str_c('(?=', str_to_upper(pattern), ')')) %>% distinct
   basic <- enzymes %>% mutate(pattern = str_to_upper(pattern)) %>% distinct
   seqs %>% map_chr(match_one_seq, basic, enzymes)
 }
