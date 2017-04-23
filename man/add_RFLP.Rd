@@ -6,6 +6,16 @@
 \usage{
 add_RFLP(iSTOP, width = 150, enzymes = NULL, cores = 1)
 }
+\arguments{
+\item{iSTOP}{A dataframe resulting from \link{locate_PAM}.}
+
+\item{width}{An integer specifiying range of unique cutting.}
+
+\item{enzymes}{A dataframe of enzymes considered. Defaults to NULL which will
+use an enzyme dataset included in the iSTOP package.}
+
+\item{cores}{Number of cores to use with \link[=pblapply]{pbapply}}
+}
 \description{
 Add RFLP enzymes to iSTOP data
 }

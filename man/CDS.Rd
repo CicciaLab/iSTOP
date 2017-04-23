@@ -2,6 +2,7 @@
 % Please edit documentation in R/CDS-coordinates.R
 \name{CDS}
 \alias{CDS}
+\alias{CDS_example}
 \alias{CDS_Celegans_UCSC_ce11}
 \alias{CDS_Dmelanogaster_UCSC_dm6}
 \alias{CDS_Drerio_UCSC_danRer10}
@@ -13,6 +14,8 @@
 \title{Generate a CDS coordinates table}
 \usage{
 CDS(tx, gene, tx_cols, gene_cols, shift_start = 1L, shift_end = 0L)
+
+CDS_example()
 
 CDS_Celegans_UCSC_ce11()
 
@@ -39,10 +42,18 @@ contain comma separated cooordinates for each exon in the transcript.
 An example file can be found
 \href{http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz}{here}.}
 
+\item{gene}{A URL to a tab separated file that maps transcript identifiers
+to common gene names. An example file can be found
+\href{http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/kgXref.txt.gz}{here}.}
+
 \item{tx_cols}{A character vector of expected column names for the
 known-gene reference file. Required columns: "tx", "chr", "strand",
 "cds_start", "cds_end", "exon_start" and "exon_end". All other columns will
 be ignored.}
+
+\item{gene_cols}{A character vector of expected column names for the
+cross-reference file. Required columns: "tx" and "gene". All other columns
+will be ignored.}
 
 \item{shift_start}{Number of bases to shift the start positions. Defaults
 to 1 as this is necessary for compatibility with \link[Biostrings:getSeq]{Biostrings::getSeq} which
@@ -50,14 +61,6 @@ includes the start position in the returned sequence and begins counting bases
 at 1.}
 
 \item{shift_end}{Number of bases to shift the end positions. Defaults to 0.}
-
-\item{tx2gene}{A URL to a tab separated file that maps transcript identifiers
-to common gene names. An example file can be found
-\href{http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/kgXref.txt.gz}{here}.}
-
-\item{tx2gene_cols}{A character vector of expected column names for the
-cross-reference file. Required columns: "tx" and "gene". All other columns
-will be ignored.}
 }
 \value{
 A data.frame with the following columns where each row represents
@@ -69,8 +72,8 @@ a single exon:
 \item \strong{exon}    \emph{\code{int}} Exon rank in gene (lowest contains ATG, highest contains native Stop)
 \item \strong{chr}     \emph{\code{chr}} Chromosome
 \item \strong{strand}  \emph{\code{chr}} Strand (+/-)
-\item \strong{start}   \emph{\code{int}} CDS coordinate start (always < \strong{end})
-\item \strong{end}     \emph{\code{int}} CDS coordinate end (always > \strong{start})
+\item \strong{start}   \emph{\code{int}} CDS coordinate start (always <= \strong{end})
+\item \strong{end}     \emph{\code{int}} CDS coordinate end (always >= \strong{start})
 }
 }
 \description{
@@ -86,6 +89,6 @@ include the start codon). The absolute numbering is unimportant so long as they
 are numbered in the correct order. (3) The first and last exon coordinates should
 begin with the start codon and end with the stop codon.
 
-To save the trouble of looking up URLs, pre-defined CDS data.frame builders
+To save the trouble of looking up URLs, pre-defined CDS builders
 are provided. They are named \code{CDS_<Species>_<data-source>_<genome-assembly-ID>()}.
 }

@@ -13,16 +13,17 @@ RoxygenNote: 6.0.1
 biocViews: Software, Genetics
 Import:
   assertthat,
-  dplyr,
-  stringr,
-  purrr,
-  tibble,
-  tidyr,
   BSgenome,
   Biostrings,
-  pbapply
+  dplyr,
+  pbapply,
+  purrr,
+  readr,
+  stringr,
+  tibble,
+  tidyr
 Suggests:
-  tidyverse,
   knitr,
   rmarkdown,
-  roxygen2
+  roxygen2,
+  tidyverse

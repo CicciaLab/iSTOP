@@ -67,7 +67,7 @@ library(tidyverse)
 library(iSTOP)
 
 # Read your previously saved CDS coordinates and prepare your genome
-CDS_Human <- read_csv('~/Desktop/CDS-Human.csv')
+CDS_Human <- CDS_example()
 Genome    <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
 
 # (1) Detect iSTOP targets for a single gene
@@ -87,12 +87,14 @@ BRCA <-
   add_RFLP(width = 150)
   
 # (3) Detect iSTOP targets for a set of transcript IDs
-TP53 <-
+ATR <-
   CDS_Human %>%
-  filter(tx %in% c('uc002gig.2', 'uc002gii.2', 'uc002gij.4')) %>%
+  filter(tx %in% c('uc003eux.5', 'uc062ooq.1', 'uc062oor.1')) %>%
   locate_codons(Genome) %>%
   locate_PAM(Genome) %>%
   add_RFLP(width = 150)
+
+View(ATR)
 ```
 
 # Visualize iSTOP coordinates
@@ -216,6 +218,18 @@ Hooray_XY <-
   filter(gene == 'PLCXD1') %>%
   locate_codons(Genome_Human_XY) %>%
   locate_PAM(Genome_Human_XY)
+```
+
+# Other features
+
+- `locate_codons` supports custom codon specification
+- `locate_PAM` supports custom PAMs and custom spacing
+- `add_RFLP` supports custom enzymes sets
+
+To access additional documentation for specific functions in the iSTOP package:
+
+```{r}
+help(package = 'iSTOP')
 ```
 
 # Issues? Requests?
