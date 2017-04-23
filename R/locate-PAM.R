@@ -1,5 +1,27 @@
 # ---- Locate iSTOP ----
+#' Locate PAM near a genomic coordinate
+#'
+#' Uses the results of [locate_codons] to determine whether there is an available
+#' PAM with desired spacing from the genomic coordinate of the targeted base.
+#'
+#' @param codons A dataframe resulting from [locate_codons].
+#' @param genome A [BSgenome][BSgenome::BSgenome] sequence database,
+#' or a [Biostrings][readDNAStringSet]. Used to extract the genomic sequence context
+#' for each genomic coordinate in `codons`.
+#' @param spacing A vector of two integers. The range of PAM spacing. These
+#' numbers correspond to the minimum and maximum allowable nucleotides between
+#' the targeted base and the PAM. Defaults to `c(12, 16)`
+#' @param PAM A named vector of PAM motifs to be considered. Names correspond to
+#' resulting column names in the returned dataframe. Values correspond to regular
+#' expressions used to identify the PAM. Default PAM patterns include `.GG`, `.GA`
+#' `.GCG`, `.GAG`, `..G[AG][AG]T`, and `...[AG][AG]T`.
+#' @param PAM_widths A vector with one integer for every `PAM`. These numbers correspond
+#' to the width of the PAM.
+#' @param flanking An integer specifying how much flanking genomic context to return
+#' in the resulting dataframe. Defaults to 150.
+#'
 #' @export
+#' @md
 
 locate_PAM <- function(codons,
                        genome,
@@ -13,7 +35,11 @@ locate_PAM <- function(codons,
                        PAM_widths = c(3, 3, 4, 4, 6, 6),
                        flanking = 150) {
 
-  assert_that(length(PAM) == length(PAM_widths))
+  assert_that(
+    length(PAM) == length(PAM_widths),
+    length(spacing) == 2,
+    length(flanking) == 1
+  )
   if (nrow(codons) < 1) return(invisible(codons))
 
   codons <-
