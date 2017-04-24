@@ -5,9 +5,11 @@
 #' CDS coordinates (see [CDS]), and its corresponding
 #'  [BSgenome][BSgenome::BSgenome] sequence database.
 #'
-#' @param cds A data.frame of CDS coordinates. See [CDS][CDS#Value] for details on required columns.
-#' @param genome A [BSgenome][BSgenome::BSgenome] sequence database. CDS
-#' coordinates in `cds` should correspond to this genome assembly.
+#' @param cds A data.frame of CDS coordinates. See [CDS][CDS#Value] for details
+#' on required columns.
+#' @param genome A [BSgenome][BSgenome::BSgenome] sequence database,
+#' or a [Biostrings][readDNAStringSet]. CDS coordinates in `cds` should
+#' correspond to this genome assembly.
 #' @param codons A character vecor of codons to consider. Defaults to
 #' `c('CAA', 'CAG', 'CGA', 'TGG', 'TGG')` which are all of the codons
 #' with iSTOP targetable bases.
@@ -20,7 +22,7 @@
 #' `sg_strand`. Should be the same length as `codons`. Defaults to `c(F, F, F, T, T)`
 #' @param cores Number of cores to use for parallel processing with [pblapply][pbapply::pblapply]
 #'
-#' @details Each transcript is processed independently based on the `tx_id`
+#' @details Each transcript is processed independently based on the `tx`
 #' column of the `cds` data.frame.
 #'
 #' **CDS validation** - Each CDS is validated by checking that the coordinates
@@ -50,9 +52,6 @@
 #'   - __cds_coord__    _`int`_ Coordinate of targeted base in CDS (start == 1)
 #'   - __genome_coord__ _`int`_ Coordinate of targeted base in genome
 #'
-#' @import dplyr
-#' @import stringr
-#' @import assertthat
 #' @importFrom purrr map map2 pmap is_character is_integer is_logical
 #' @importFrom tibble data_frame lst
 #' @importFrom BSgenome getSeq

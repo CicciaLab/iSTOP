@@ -9,10 +9,12 @@ locate_codons(cds, genome, codons = c("CAA", "CAG", "CGA", "TGG", "TGG"),
   cores = getOption("mc.cores", 1L))
 }
 \arguments{
-\item{cds}{A data.frame of CDS coordinates. See \link[=CDS#Value]{CDS} for details on required columns.}
+\item{cds}{A data.frame of CDS coordinates. See \link[=CDS#Value]{CDS} for details
+on required columns.}
 
-\item{genome}{A \link[BSgenome:BSgenome]{BSgenome} sequence database. CDS
-coordinates in \code{cds} should correspond to this genome assembly.}
+\item{genome}{A \link[BSgenome:BSgenome]{BSgenome} sequence database,
+or a \link[=readDNAStringSet]{Biostrings}. CDS coordinates in \code{cds} should
+correspond to this genome assembly.}
 
 \item{codons}{A character vecor of codons to consider. Defaults to
 \code{c('CAA', 'CAG', 'CGA', 'TGG', 'TGG')} which are all of the codons
@@ -56,7 +58,7 @@ CDS coordinates (see \link{CDS}), and its corresponding
 \link[BSgenome:BSgenome]{BSgenome} sequence database.
 }
 \details{
-Each transcript is processed independently based on the \code{tx_id}
+Each transcript is processed independently based on the \code{tx}
 column of the \code{cds} data.frame.
 
 \strong{CDS validation} - Each CDS is validated by checking that the coordinates

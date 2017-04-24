@@ -13,7 +13,7 @@
 #' An example file can be found
 #' [here](http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz).
 #'
-#' @param tx2gene A URL to a tab separated file that maps transcript identifiers
+#' @param gene A URL to a tab separated file that maps transcript identifiers
 #' to common gene names. An example file can be found
 #' [here](http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/kgXref.txt.gz).
 #'
@@ -22,7 +22,7 @@
 #' "cds_start", "cds_end", "exon_start" and "exon_end". All other columns will
 #' be ignored.
 #'
-#' @param tx2gene_cols A character vector of expected column names for the
+#' @param gene_cols A character vector of expected column names for the
 #' cross-reference file. Required columns: "tx" and "gene". All other columns
 #' will be ignored.
 #'
@@ -40,7 +40,7 @@
 #' are numbered in the correct order. (3) The first and last exon coordinates should
 #' begin with the start codon and end with the stop codon.
 #'
-#' To save the trouble of looking up URLs, pre-defined CDS data.frame builders
+#' To save the trouble of looking up URLs, pre-defined CDS builders
 #' are provided. They are named `CDS_<Species>_<data-source>_<genome-assembly-ID>()`.
 #'
 #' @return A data.frame with the following columns where each row represents
@@ -52,17 +52,17 @@
 #'   - __exon__    _`int`_ Exon rank in gene (lowest contains ATG, highest contains native Stop)
 #'   - __chr__     _`chr`_ Chromosome
 #'   - __strand__  _`chr`_ Strand (+/-)
-#'   - __start__   _`int`_ CDS coordinate start (always < __end__)
-#'   - __end__     _`int`_ CDS coordinate end (always > __start__)
+#'   - __start__   _`int`_ CDS coordinate start (always <= __end__)
+#'   - __end__     _`int`_ CDS coordinate end (always >= __start__)
 #'
 #' @rdname CDS
-#' @import dplyr
 #' @importFrom tidyr separate_rows
-#' @import stringr
 #' @export
 #' @md
 
 CDS <- function(tx, gene, tx_cols, gene_cols, shift_start = 1L, shift_end = 0L) {
+
+  Validate_CDS_args(tx, gene, tx_cols, gene_cols, shift_start, shift_end)
 
   message('Downloading CDS coordinates from:\n    ', tx, '\n    ', gene)
 
@@ -117,8 +117,13 @@ CDS <- function(tx, gene, tx_cols, gene_cols, shift_start = 1L, shift_end = 0L) 
   right_join(genes, expanded, by = 'tx') %>% arrange(tx, exon)
 }
 
-
 # ---- Pre-defined CDS constructors ----
+#' @rdname CDS
+#' @export
+CDS_example <- function() {
+  read_csv(system.file('db/CDS-ATM-ATR-example.csv', package = 'iSTOP'), col_types = cols())
+}
+
 #' @rdname CDS
 #' @export
 CDS_Celegans_UCSC_ce11 <- function() {
@@ -319,23 +324,4 @@ get_cds_coords <- function(txdb, fix_chr = NULL, fix_ids = NULL) {
   if (!is.null(fix_chr)) cds$CDSCHROM <- fix_chr(cds$CDSCHROM)
   if (!is.null(fix_ids)) cds$GENEID   <- fix_ids(cds$GENEID)
   return(cds)
-}
-
-require_bioc_install <- function(require, recommend) {
-  installed <- rownames(installed.packages())
-
-  if (!all(recommend %in% installed)) {
-    message(
-      'Recommended package installation:\n',
-      '  BiocInstaller::biocLite(c("', stringr::str_c(recommend, collapse = '", "'), '"))'
-    )
-  }
-
-  if (!all(require %in% installed)) {
-    stop(
-      'Required package installation:\n',
-      '  BiocInstaller::biocLite(c("', stringr::str_c(require, collapse = '", "'), '"))',
-      call. = FALSE
-    )
-  }
 }

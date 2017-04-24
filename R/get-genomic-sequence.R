@@ -1,19 +1,19 @@
 # ---- Genomic Sequence ----
-#' Get Genomic Sequence
-#'
-#' From a [BSgenome::BSgenome] object access upstream and downstream sequence
-#' with respect to strand at a chromosomal coordinate. A '-' character will be
-#' added for each position outside of sequence boundary.
-#'
-#' @param at         <int:vector> A coordinate in a chromosome. First base is at 1.
-#' @param add_5prime <int:vector> Number of bases to add to 5' side of `at`
-#'                                with respect to `strand`.
-#' @param add_3prime <int:vector> Number of bases to add to 3' side of `at`
-#'                                with respect to `strand`.
-#' @param genome     <BSgenome>   A BSgenome object of sequence data.
-#' @param chr        <chr:vector> Chromosome names. Must match names in `BSgenome`.
-#' @param strand     <chr:vector> Strand orientation. All strand values must
-#'                                be '+' or '-'.
+# Get Genomic Sequence
+#
+# From a [BSgenome::BSgenome] object access upstream and downstream sequence
+# with respect to strand at a chromosomal coordinate. A '-' character will be
+# added for each position outside of sequence boundary.
+#
+# @param at         <int:vector> A coordinate in a chromosome. First base is at 1.
+# @param add_5prime <int:vector> Number of bases to add to 5' side of `at`
+#                                with respect to `strand`.
+# @param add_3prime <int:vector> Number of bases to add to 3' side of `at`
+#                                with respect to `strand`.
+# @param genome     <BSgenome>   A BSgenome object of sequence data.
+# @param chr        <chr:vector> Chromosome names. Must match names in `BSgenome`.
+# @param strand     <chr:vector> Strand orientation. All strand values must
+#                                be '+' or '-'.
 
 get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand) {
 
