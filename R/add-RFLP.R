@@ -34,7 +34,7 @@ add_RFLP <- function(iSTOP, width = 150, enzymes = NULL, cores = 1) {
     pbapply::pblapply(function(df) {
       center <- ceiling(str_length(df$searched) / 2)
       search <- str_sub(df$searched, start = center - width, end = center + width)
-      df[[paste0('RFLP_', width)]] <- identify_RFLP_enzymes(search, enzyme_cominations)
+      df[[paste0('RFLP_', width)]] <- identify_RFLP_enzymes(search, enzyme_combinations)
       return(df)
     }, cl = cores) %>%
     bind_rows
