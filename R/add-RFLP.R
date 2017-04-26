@@ -71,37 +71,52 @@ process_enzymes <- function(enzymes = NULL) {
     # Ensure that forward and reverse patterns will match even when overlapping
     mutate(
       forward = str_c('(?=', str_to_upper(forward), ')'),
-      reverse = str_c('(?=', str_to_upper(reverse), ')')
+      reverse = str_c('(?=', str_to_upper(reverse), ')'),
+      fwd_rev = str_c(forward, '|', reverse)
     )
 }
 
 identify_RFLP_enzymes <- function(seqs, enzymes) {
-  # The basic pattern probably should do a 0 width look ahead because we want to match possible
-  # overlapping recognition sites, if enzyme cuts twice with an overlapping recognition
-  # sequence we will exclude it since it complicates the assay. A better strategy might
-  # be to make the expected sequence change and check for 1 cut in unmodified region
-  # Then check for no-cut after expected modification
-  #basic <- enzymes %>% mutate(pattern = str_c('(?=', str_to_upper(pattern), ')')) %>% distinct
-  basic <- enzymes %>% mutate(pattern = str_to_upper(pattern)) %>% distinct
+  # Get all unique patterns
+  basic <- enzymes %>% select(enzyme, fwd_rev) %>% distinct
   purrr::map_chr(seqs, match_one_seq, basic, enzymes)
 }
 
 
+
 match_one_seq <- function(seq, basic, enzymes) {
-  # How many times does the pattern match in a case insensitive way
-  nmatch_fwd <- seq %>% str_locate_all(regex(basic$forward, ignore_case = T)) %>% purrr::map_int(nrow)
-  nmatch_rev <- seq %>% str_locate_all(regex(basic$reverse, ignore_case = T)) %>% purrr::map_int(nrow)
+  # The enzymes that match the base edit (a small number and faster pattern matching)
+  match_base_edit <- enzymes$enzyme[which(str_detect(seq, enzymes$pattern))]
 
-  # Do the final search with just those that match only once
-  search <- enzymes %>%
-    filter(enzyme %in% basic$enzyme[which(nmatch_fwd + nmatch_rev == 1L)])
+  # Get outta here if nothing matched the intended base edit
+  if (length(match_base_edit) == 0) return('')
 
-  if (nrow(search) == 0) return('')
+  # Otherwise check how many times the enzyme cuts the sequence
+  search <- basic[basic$enzyme %in% match_base_edit, ]
+  nmatch <- str_locate_all(seq, regex(search$fwd_rev, ignore_case = T)) %>% purrr::map_int(nrow)
+  uniquely_match_base_edit <- search$enzyme[which(nmatch == 1L)]
 
-  seq %>%
-    purrr::map(~search$enzyme[str_detect(., search$pattern)]) %>% # subset enzymes if pattern detected in seq
-    purrr::map_chr(~str_c(., collapse = ' | ') %||% '')  # collapse matches into single string
+  # Get outta here if nothing uniquely matched the intended base edit
+  if (length(uniquely_match_base_edit) == 0) return('')
+
+  # Otherwise collapse enzymes into a single string
+  str_c(uniquely_match_base_edit, collapse = ' | ')
 }
+
+#match_one_seq <- function(seq, basic, enzymes) {
+#  # How many times does the pattern match in a case insensitive way
+#  nmatch <- seq %>% str_locate_all(regex(basic$fwd_rev, ignore_case = T)) %>% purrr::map_int(nrow)
+#
+#  # Do the final search with just those that match only once
+#  search <- enzymes %>%
+#    filter(enzyme %in% basic$enzyme[which(nmatch == 1L)])
+#
+#  if (nrow(search) == 0) return('')
+#
+#  seq %>%
+#    purrr::map(~search$enzyme[str_detect(., search$pattern)]) %>% # subset enzymes if pattern detected in seq
+#    purrr::map_chr(~str_c(., collapse = ' | ') %||% '')  # collapse matches into single string
+#}
 
 # ---- Misc utility functions ----
 
