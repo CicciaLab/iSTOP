@@ -89,7 +89,7 @@ match_one_seq <- function(seq, basic, enzymes) {
   match_base_edit <- enzymes$enzyme[which(str_detect(seq, enzymes$pattern))]
 
   # Get outta here if nothing matched the intended base edit
-  if (length(match_base_edit) == 0) return('')
+  if (length(match_base_edit) == 0) return(NA_character_)
 
   # Otherwise check how many times the enzyme cuts the sequence
   search <- basic[basic$enzyme %in% match_base_edit, ]
@@ -97,7 +97,7 @@ match_one_seq <- function(seq, basic, enzymes) {
   uniquely_match_base_edit <- search$enzyme[which(nmatch == 1L)]
 
   # Get outta here if nothing uniquely matched the intended base edit
-  if (length(uniquely_match_base_edit) == 0) return('')
+  if (length(uniquely_match_base_edit) == 0) return(NA_character_)
 
   # Otherwise collapse enzymes into a single string
   str_c(uniquely_match_base_edit, collapse = ' | ')
