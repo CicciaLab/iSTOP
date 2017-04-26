@@ -83,7 +83,6 @@ identify_RFLP_enzymes <- function(seqs, enzymes) {
 }
 
 
-
 match_one_seq <- function(seq, basic, enzymes) {
   # The enzymes that match the base edit (a small number and faster pattern matching)
   match_base_edit <- enzymes$enzyme[which(str_detect(seq, enzymes$pattern))]
@@ -102,21 +101,6 @@ match_one_seq <- function(seq, basic, enzymes) {
   # Otherwise collapse enzymes into a single string
   str_c(uniquely_match_base_edit, collapse = ' | ')
 }
-
-#match_one_seq <- function(seq, basic, enzymes) {
-#  # How many times does the pattern match in a case insensitive way
-#  nmatch <- seq %>% str_locate_all(regex(basic$fwd_rev, ignore_case = T)) %>% purrr::map_int(nrow)
-#
-#  # Do the final search with just those that match only once
-#  search <- enzymes %>%
-#    filter(enzyme %in% basic$enzyme[which(nmatch == 1L)])
-#
-#  if (nrow(search) == 0) return('')
-#
-#  seq %>%
-#    purrr::map(~search$enzyme[str_detect(., search$pattern)]) %>% # subset enzymes if pattern detected in seq
-#    purrr::map_chr(~str_c(., collapse = ' | ') %||% '')  # collapse matches into single string
-#}
 
 # ---- Misc utility functions ----
 
