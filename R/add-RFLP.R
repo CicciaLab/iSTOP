@@ -21,29 +21,7 @@ add_RFLP <- function(iSTOP, width = 150, enzymes = NULL, cores = 1) {
 
   message('Adding RFLP...')
 
-  if (is.null(enzymes)) {
-  enzymes <-
-    system.file('db/restriction-enzymes.csv', package = 'iSTOP') %>%
-    read_csv(col_types = cols_only(enzyme  = 'c', forward = 'c', reverse = 'c', exclude = 'l')) %>%
-    filter(!exclude)
-  }
-
-  enzyme_cominations <-
-    enzymes %>%
-    select(enzyme, forward, reverse) %>%
-    # Be agnostic to strand orientation (i.e. keep both)
-    gather(orientation, pattern, forward, reverse) %>%
-    # Change each occurence of 'C' to 'c' one at a time (since this is the intended base change)
-    mutate(pattern = str_to_lower_each(pattern, 'C')) %>%
-    unnest %>%
-    # If there is an ambiguous pattern for 'c' that does not include 'T' then change
-    # pattern to only match 'c' (since 'T' is what 'C' will be changed to)
-    mutate(pattern = str_replace(pattern, '\\[Ac\\]|\\[cG\\]|\\[AcG\\]', 'c')) %>%
-    # If 'c' is contained within an ambiguity that includes 'T' then remove pattern
-    # (since we do not want to match after 'C' is chaned to 'T')
-    filter(!str_detect(pattern, '\\[cT\\]|\\[AcT\\]|\\[cGT\\]')) %>%
-    select(enzyme, pattern) %>%
-    distinct
+  enzyme_combinations <- process_enzymes(enzymes)
 
   if (cores <= 1L) cores <- NULL
 
@@ -62,6 +40,40 @@ add_RFLP <- function(iSTOP, width = 150, enzymes = NULL, cores = 1) {
     bind_rows
 }
 
+# Converts all Cs to lowercase one at a time to generate all possible match patterns
+# Supports ambiguities by converting compatible patterns to 'c' and excluding incombatible ambiguous matches
+process_enzymes <- function(enzymes = NULL) {
+
+  if (is.null(enzymes)) {
+    enzymes <-
+      system.file('db/restriction-enzymes.csv', package = 'iSTOP') %>%
+      read_csv(col_types = cols_only(enzyme  = 'c', forward = 'c', reverse = 'c', exclude = 'l')) %>%
+      filter(!exclude)
+  }
+
+  enzymes %>%
+    select(enzyme, forward, reverse) %>%
+    # Be agnostic to strand orientation (i.e. keep both)
+    tidyr::gather(orientation, pattern, forward, reverse) %>%
+    # Change each occurence of 'C' to 'c' one at a time (since this is the intended base change)
+    mutate(pattern = str_to_lower_each(pattern, 'C')) %>%
+    tidyr::unnest() %>%
+    # If there is an ambiguous pattern for 'c' that does not include 'T' then change
+    # pattern to only match 'c' (since 'T' is what 'C' will be changed to)
+    mutate(pattern = str_replace(pattern, '\\[Ac\\]|\\[cG\\]|\\[AcG\\]', 'c')) %>%
+    # If 'c' is contained within an ambiguity that includes 'T' then remove pattern
+    # (since we do not want to match after 'C' is chaned to 'T')
+    filter(!str_detect(pattern, '\\[cT\\]|\\[AcT\\]|\\[cGT\\]')) %>%
+    select(enzyme, pattern) %>%
+    distinct %>%
+    # Replace standard forward and reverse patterns
+    left_join(enzymes, by = 'enzyme') %>%
+    # Ensure that forward and reverse patterns will match even when overlapping
+    mutate(
+      forward = str_c('(?=', str_to_upper(forward), ')'),
+      reverse = str_c('(?=', str_to_upper(reverse), ')')
+    )
+}
 
 identify_RFLP_enzymes <- function(seqs, enzymes) {
   # The basic pattern probably should do a 0 width look ahead because we want to match possible
@@ -71,25 +83,24 @@ identify_RFLP_enzymes <- function(seqs, enzymes) {
   # Then check for no-cut after expected modification
   #basic <- enzymes %>% mutate(pattern = str_c('(?=', str_to_upper(pattern), ')')) %>% distinct
   basic <- enzymes %>% mutate(pattern = str_to_upper(pattern)) %>% distinct
-  seqs %>% map_chr(match_one_seq, basic, enzymes)
+  purrr::map_chr(seqs, match_one_seq, basic, enzymes)
 }
 
 
 match_one_seq <- function(seq, basic, enzymes) {
   # How many times does the pattern match in a case insensitive way
-  nmatch <- seq %>%
-    str_locate_all(regex(basic$pattern, ignore_case = T)) %>%
-    map_int(nrow)
+  nmatch_fwd <- seq %>% str_locate_all(regex(basic$forward, ignore_case = T)) %>% purrr::map_int(nrow)
+  nmatch_rev <- seq %>% str_locate_all(regex(basic$reverse, ignore_case = T)) %>% purrr::map_int(nrow)
 
   # Do the final search with just those that match only once
   search <- enzymes %>%
-    filter(enzyme %in% basic$enzyme[which(nmatch == 1L)])
+    filter(enzyme %in% basic$enzyme[which(nmatch_fwd + nmatch_rev == 1L)])
 
   if (nrow(search) == 0) return('')
 
   seq %>%
-    map(~search$enzyme[str_detect(., search$pattern)]) %>% # subset enzymes if pattern detected in seq
-    map_chr(~str_c(., collapse = ' | ') %||% NA_character_)  # collapse matches into single string
+    purrr::map(~search$enzyme[str_detect(., search$pattern)]) %>% # subset enzymes if pattern detected in seq
+    purrr::map_chr(~str_c(., collapse = ' | ') %||% '')  # collapse matches into single string
 }
 
 # ---- Misc utility functions ----
@@ -118,9 +129,9 @@ match_one_seq <- function(seq, basic, enzymes) {
 # Make each occurence of a pattern in a sting lower case individually
 str_to_lower_each <- function(string, pattern, locale = 'en') {
   loc <- str_locate_all(string, pattern)
-  lhs <- map2(string, loc, ~str_sub(.x, start =  1L, end   = .y[, 'start'] - 1L))
-  rhs <- map2(string, loc, ~str_sub(.x, end   = -1L, start = .y[, 'end']   + 1L))
-  mid <- map2(string, loc, ~str_sub(.x, start = .y[, 'start'], end = .y[, 'end']) %>% str_to_lower(locale))
+  lhs <- purrr::map2(string, loc, ~str_sub(.x, start =  1L, end   = .y[, 'start'] - 1L))
+  rhs <- purrr::map2(string, loc, ~str_sub(.x, end   = -1L, start = .y[, 'end']   + 1L))
+  mid <- purrr::map2(string, loc, ~str_sub(.x, start = .y[, 'start'], end = .y[, 'end']) %>% str_to_lower(locale))
 
-  pmap(list(lhs, mid, rhs), str_c)
+  purrr::pmap(list(lhs, mid, rhs), str_c)
 }
