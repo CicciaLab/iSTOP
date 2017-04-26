@@ -26,4 +26,5 @@ Suggests:
   knitr,
   rmarkdown,
   roxygen2,
-  tidyverse
+  tidyverse,
+    testthat
