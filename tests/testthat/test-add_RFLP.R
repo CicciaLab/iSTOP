@@ -25,4 +25,14 @@ test_that('RFLP matching considers both strands', {
     iSTOP:::identify_RFLP_enzymes('CCTCCTc', enzymes),
     NA_character_
   )
+  # If match two overlapping sites then should return nothing
+  expect_equal(
+    iSTOP:::identify_RFLP_enzymes('GGTcCAG', enzymes),
+    NA_character_
+  )
+  # Overlapping on opposite forward and reverse patterns should match either
+  expect_equal(
+    stringr::str_locate_all('GGTcCAG', regex('(?=GGTc)|(?=cCAG)', ignore_case = T)) %>% purrr::map_int(nrow),
+    2
+  )
 })

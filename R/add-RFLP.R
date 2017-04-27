@@ -72,7 +72,7 @@ process_enzymes <- function(enzymes = NULL) {
     mutate(
       forward = str_c('(?=', str_to_upper(forward), ')'),
       reverse = str_c('(?=', str_to_upper(reverse), ')'),
-      fwd_rev = str_c(forward, '|', reverse)
+      fwd_rev = if_else(forward == reverse, forward, str_c(forward, '|', reverse))
     )
 }
 
