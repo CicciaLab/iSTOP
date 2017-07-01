@@ -50,6 +50,8 @@ will have a separate row for each):
 \item \strong{aa_coord}     \emph{\code{int}} Coordinate of targeted amino acid (start == 1)
 \item \strong{cds_coord}    \emph{\code{int}} Coordinate of targeted base in CDS (start == 1)
 \item \strong{genome_coord} \emph{\code{int}} Coordinate of targeted base in genome
+\item \strong{NMD_pred}     \emph{\code{lgl}} Is nonsense-mediated-decay predicted (i.e. target base is >56 bases upstream of last exon junction)
+\item \strong{rel_position} \emph{\code{dbl}} Relative position in CDS of the targeted base
 }
 }
 \description{
