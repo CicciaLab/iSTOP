@@ -77,7 +77,8 @@ locate_PAM <- function(codons,
         stringr::str_sub(searched, end   = flanking),                                                     # LHS
         stringr::str_sub(searched, start = flanking + 1, end = flanking + 1) %>% stringr::str_to_lower(), # C -> c
         stringr::str_sub(searched, start = flanking + 2)                                                  # RHS
-      )
+      ),
+      no_upstream_G = !str_detect(searched, 'Gc')
     )
 
   # Add an sgSTOP column for each PAM
