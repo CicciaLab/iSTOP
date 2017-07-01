@@ -51,6 +51,8 @@
 #'   - __aa_coord__     _`int`_ Coordinate of targeted amino acid (start == 1)
 #'   - __cds_coord__    _`int`_ Coordinate of targeted base in CDS (start == 1)
 #'   - __genome_coord__ _`int`_ Coordinate of targeted base in genome
+#'   - __NMD_pred__     _`lgl`_ Is nonsense-mediated-decay predicted (i.e. target base is >56 bases upstream of last exon junction)
+#'   - __rel_position__ _`dbl`_ Relative position in CDS of the targeted base
 #'
 #' @importFrom purrr map map2 pmap is_character is_integer is_logical
 #' @importFrom tibble data_frame lst
@@ -183,9 +185,10 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
       aa_target    = codon %>% Biostrings::DNAStringSet() %>% Biostrings::translate() %>% as.character,
       genome_coord = index_genome[cds_coord],
       aa_coord     = as.integer(ceiling(cds_coord / 3)),
-      NMD_pred     = cds_coord < NMD_boundary
+      NMD_pred     = cds_coord < NMD_boundary,
+      rel_position = cds_coord / cds_length
     ) %>%
-    select(tx:aa_target, codon, aa_coord, cds_coord, genome_coord, NMD_pred) %>%
+    select(tx:aa_target, codon, aa_coord, cds_coord, genome_coord, NMD_pred, rel_position) %>%
     arrange(cds_coord)
 }
 

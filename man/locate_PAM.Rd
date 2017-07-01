@@ -4,9 +4,8 @@
 \alias{locate_PAM}
 \title{Locate PAM near a genomic coordinate}
 \usage{
-locate_PAM(codons, genome, spacing = c(12, 16), PAM = c(sgNGG = ".GG", sgNGA
-  = ".GA", sgNGCG = ".GCG", sgNGAG = ".GAG", sgNNGRRT = "..G[AG][AG]T", sgNNNRRT
-  = "...[AG][AG]T"), PAM_widths = c(3, 3, 4, 4, 6, 6), flanking = 150)
+locate_PAM(codons, genome, spacing = PAM_spacing(),
+  PAM = PAM_patterns_default(), flanking = 150)
 }
 \arguments{
 \item{codons}{A dataframe resulting from \link{locate_codons}.}
@@ -15,19 +14,17 @@ locate_PAM(codons, genome, spacing = c(12, 16), PAM = c(sgNGG = ".GG", sgNGA
 or a \link[=readDNAStringSet]{Biostrings}. Used to extract the genomic sequence context
 for each genomic coordinate in \code{codons}.}
 
-\item{spacing}{A vector of two integers. The range of PAM spacing. These
-numbers correspond to the minimum and maximum allowable nucleotides between
-the targeted base and the PAM. Defaults to \code{c(12, 16)}}
+\item{spacing}{The result of \link{PAM_spacing}, which is a named list of two-element
+numeric vectors. Each two-element vector defines a range of spacing between an
+edited base and the PAM (i.e. the minimum and maximum allowable nucleotides between
+the targeted base and the PAM). Each pair of ranges is checked in order with the
+first range prioritized over the next. Defaults to \code{PAM_spacing()}.}
 
-\item{PAM}{A named vector of PAM motifs to be considered. Names correspond to
-resulting column names in the returned dataframe. Values correspond to regular
-expressions used to identify the PAM. Default PAM patterns include \code{.GG}, \code{.GA}
-\code{.GCG}, \code{.GAG}, \code{..G[AG][AG]T}, and \code{...[AG][AG]T}.}
+\item{PAM}{A named list of PAM patterns to be considered (see \link{PAM_pattern}). Names
+correspond to resulting column names in the returned dataframe. Default PAM patterns
+include \code{.GG}, \code{.GA}, \code{.GCG}, \code{.GAG}, \code{..G[AG][AG]T}, and \code{...[AG][AG]T}.}
 
-\item{PAM_widths}{A vector with one integer for every \code{PAM}. These numbers correspond
-to the width of the PAM.}
-
-\item{flanking}{An integer specifying how much flanking genomic context to return
+\item{flanking}{An number specifying how much flanking genomic context to return
 in the resulting dataframe. Defaults to 150.}
 }
 \description{
