@@ -14,6 +14,7 @@
 # @param chr        <chr:vector> Chromosome names. Must match names in `BSgenome`.
 # @param strand     <chr:vector> Strand orientation. All strand values must
 #                                be '+' or '-'.
+#' @importFrom purrr map2_dbl map_chr map
 
 get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand) {
 
@@ -33,8 +34,8 @@ get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand
   max_coord <- GenomeInfoDb::seqlengths(genome)[chr]
 
   # Add to 'at' in 5' and 3' direction which depends on the strand
-  start <- map2_dbl(strand, at, ~switch(.x, '+' = .y - add_5prime, '-' = .y - add_3prime))
-  end   <- map2_dbl(strand, at, ~switch(.x, '+' = .y + add_3prime, '-' = .y + add_5prime))
+  start <- purrr::map2_dbl(strand, at, ~switch(.x, '+' = .y - add_5prime, '-' = .y - add_3prime))
+  end   <- purrr::map2_dbl(strand, at, ~switch(.x, '+' = .y + add_3prime, '-' = .y + add_5prime))
 
   # Start should always be smaller of the two
   st <- pmin(start, end)
@@ -65,9 +66,11 @@ str_pad_if <- function(string, test, with, width, side = c('left', 'right')) {
   left  <- test & side == 'left'
   right <- test & side == 'right'
   # pad with string at width
-  pad_left  <- map(width[left],  ~rep(with, times = .)) %>% map_chr(stringr::str_c, collapse = '')
-  pad_right <- map(width[right], ~rep(with, times = .)) %>% map_chr(stringr::str_c, collapse = '')
+
+  pad_left  <- purrr::map(width[left],  ~rep(with, times = .)) %>% purrr::map_chr(stringr::str_c, collapse = '')
+  pad_right <- purrr::map(width[right], ~rep(with, times = .)) %>% purrr::map_chr(stringr::str_c, collapse = '')
   string[left]  <- stringr::str_c(pad_left, string[left])
   string[right] <- stringr::str_c(string[right], pad_right)
+
   return(string)
 }
