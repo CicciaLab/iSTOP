@@ -17,7 +17,7 @@
 
 get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand) {
 
-  assert_that(
+  assertthat::assert_that(
     length(add_5prime) == length(at) | length(add_5prime) == 1L,
     length(add_3prime) == length(at) | length(add_3prime) == 1L,
     length(chr)        == length(at) | length(chr)        == 1L,
@@ -65,9 +65,9 @@ str_pad_if <- function(string, test, with, width, side = c('left', 'right')) {
   left  <- test & side == 'left'
   right <- test & side == 'right'
   # pad with string at width
-  pad_left  <- map(width[left],  ~rep(with, times = .)) %>% map_chr(str_c, collapse = '')
-  pad_right <- map(width[right], ~rep(with, times = .)) %>% map_chr(str_c, collapse = '')
-  string[left]  <- str_c(pad_left, string[left])
-  string[right] <- str_c(string[right], pad_right)
+  pad_left  <- map(width[left],  ~rep(with, times = .)) %>% map_chr(stringr::str_c, collapse = '')
+  pad_right <- map(width[right], ~rep(with, times = .)) %>% map_chr(stringr::str_c, collapse = '')
+  string[left]  <- stringr::str_c(pad_left, string[left])
+  string[right] <- stringr::str_c(string[right], pad_right)
   return(string)
 }
