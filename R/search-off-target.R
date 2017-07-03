@@ -19,17 +19,15 @@ search_off_target <- function(seqs, genome, chromosomes,
 
   # Search each chromosome
   chromosomes %>%
+    purrr::set_names(chromosomes) %>%  # give the result list names
     pbapply::pblapply(function(chrm) {
       chr <- genome[[chrm]]  # brings chromosome into memory
-      result <-
-        bind_rows(
-          search_off_target_chr(seqs, chr, '+', fixed_start, fixed_end, max_mismatch),
-          search_off_target_chr(seqs, chr, '-', fixed_start, fixed_end, max_mismatch)
-        )
-      result$chr <- chrm
-      return(result)
+      bind_rows(
+        search_off_target_chr(seqs, chr, '+', fixed_start, fixed_end, max_mismatch),
+        search_off_target_chr(seqs, chr, '-', fixed_start, fixed_end, max_mismatch)
+      )
     }, cl = cores) %>%
-    bind_rows()
+    bind_rows(.id = 'chr')
 }
 
 search_off_target_chr <- function(seqs, chromosome, orientation,
