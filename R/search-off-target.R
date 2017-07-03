@@ -10,7 +10,7 @@ search_off_target <- function(seqs, genome, chromosomes,
     message('Counting possible off targets\n',
             '  Maximum mismatches: ', max_mismatch, '\n',
             '  Fixed band (no tolerated mismatch): ',
-            fixed_band_start, '-', fixed_band_end)
+            fixed_start, '-', fixed_end)
 
   # Progress bar nonsense
   if (cores <= 1L) cores <- NULL
