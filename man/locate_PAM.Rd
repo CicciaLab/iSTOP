@@ -5,7 +5,7 @@
 \title{Locate PAM near a genomic coordinate}
 \usage{
 locate_PAM(codons, genome, spacing = PAM_spacing(),
-  PAM = PAM_patterns_default(), flanking = 150)
+  PAM = PAM_patterns_default(), flanking = 150, keep_PAM = FALSE)
 }
 \arguments{
 \item{codons}{A dataframe resulting from \link{locate_codons}.}
@@ -26,6 +26,9 @@ include \code{.GG}, \code{.GA}, \code{.GCG}, \code{.GAG}, \code{..G[AG][AG]T}, a
 
 \item{flanking}{An number specifying how much flanking genomic context to return
 in the resulting dataframe. Defaults to 150.}
+
+\item{keep_PAM}{Logical. Should the PAM sequence be included in the guides?
+Defaults to \code{FALSE}.}
 }
 \description{
 Uses the results of \link{locate_codons} to determine whether there is an available

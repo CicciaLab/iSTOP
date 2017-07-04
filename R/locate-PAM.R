@@ -18,6 +18,8 @@
 #' include `.GG`, `.GA`, `.GCG`, `.GAG`, `..G[AG][AG]T`, and `...[AG][AG]T`.
 #' @param flanking An number specifying how much flanking genomic context to return
 #' in the resulting dataframe. Defaults to 150.
+#' @param keep_PAM Logical. Should the PAM sequence be included in the guides?
+#' Defaults to `FALSE`.
 #'
 #' @export
 #' @md
@@ -26,7 +28,8 @@ locate_PAM <- function(codons,
                        genome,
                        spacing = PAM_spacing(),
                        PAM = PAM_patterns_default(),
-                       flanking = 150) {
+                       flanking = 150,
+                       keep_PAM = FALSE) {
 
   assertthat::assert_that(
     length(flanking) == 1,
@@ -103,6 +106,9 @@ locate_PAM <- function(codons,
           sequences[[col_name_spacing]],
           ifelse(!is.na(guide_sequence), names(spacing)[j], NA_character_)
         )
+
+      # Optionally remove PAM sequence
+      if (!keep_PAM) guide_sequence <- stringr::str_sub(guide_sequence, start = 1L, end = 20L)
 
       # Update
       sequences[[col_name_guide]]   <- guide_sequence
