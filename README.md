@@ -20,8 +20,7 @@ BiocInstaller::biocLite(c(
   'assertthat',
   'pbapply',
   'devtools',
-  # Packages from GitHub (github.com) (version with genome_*_join)
-  'dgrtwo/fuzzyjoin',
+  'fuzzyjoin',
   # Packages from Bioconductor (bioconductor.org)
   'BSgenome',
   'Biostrings',
@@ -97,7 +96,8 @@ plot_spliced_isoforms(
   # Limit isoforms to those validated during iSTOP search
   coords  = filter(CDS_Human, tx %in% BRCA$tx),
   # Hex colors are also valid (e.g. #8bca9d)
-  colors  = c('red', 'black'),                       
+  colors  = c('red', 'black'),
+  # Name of track = table with columns `gene` and `genome_coord` 
   NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)),   # `|` = or
   RFLP    = filter(BRCA, match_any  & has(RFLP_150)) # `&` = and
 )
