@@ -17,6 +17,11 @@ test_that('Off target search gets same results regardless of strand', {
 
   expect_matching <- c(1, 2, 3, 6, 7, 8)
 
+  #genome <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
+  #chromosomes <- BSgenome::seqnames(genome)[1:25]
+
+  #full_search <- iSTOP::search_off_target(seqs, genome, chromosomes, cores = 6)
+
   plus <-
     iSTOP:::search_off_target_chr(
       seqs,
@@ -43,12 +48,12 @@ test_that('Off target search gets same results regardless of strand', {
   )
 
   expect_equal(
-    plus$sequence,
-    minus$sequence
+    plus$guide,
+    minus$guide
   )
 
   expect_equal(
-    plus$sequence,
+    plus$guide,
     seqs[expect_matching]
   )
 

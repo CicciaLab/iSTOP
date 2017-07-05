@@ -64,7 +64,8 @@ BRCA1 <-
   filter(gene == 'BRCA1') %>%
   locate_codons(Genome) %>%
   locate_PAM(Genome) %>%
-  add_RFLP(width = 150)  # 150 is the maximum allowed
+  add_RFLP(width = 150) %>%  # 150 is the maximum allowed
+  add_RFLP(recognizes = 't') # Enzymes that cut if c edits to t
 
 # (2) Detect iSTOP targets for genes that contain the string "BRCA"
 BRCA <-
@@ -73,7 +74,7 @@ BRCA <-
   locate_codons(Genome) %>%
   locate_PAM(Genome) %>%
   add_RFLP(width = 150)
-  
+
 # (3) Detect iSTOP targets for a set of transcript IDs
 ATR <-
   CDS_Human %>%
@@ -99,7 +100,7 @@ plot_spliced_isoforms(
   colors  = c('red', 'black'),
   # Name of track = table with columns `gene` and `genome_coord` 
   NGG_NGA = filter(BRCA, has(sgNGG) | has(sgNGA)),   # `|` = or
-  RFLP    = filter(BRCA, match_any  & has(RFLP_150)) # `&` = and
+  RFLP    = filter(BRCA, match_any  & has(RFLP_C_150)) # `&` = and
 )
 ```
 

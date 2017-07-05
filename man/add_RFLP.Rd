@@ -4,10 +4,15 @@
 \alias{add_RFLP}
 \title{Add RFLP enzymes to iSTOP data}
 \usage{
-add_RFLP(iSTOP, width = 150, enzymes = NULL, cores = 1)
+add_RFLP(iSTOP, recognizes = "c", width = 150, enzymes = NULL,
+  cores = 1)
 }
 \arguments{
 \item{iSTOP}{A dataframe resulting from \link{locate_PAM}.}
+
+\item{recognizes}{The base recognized by the enzyme. One of "c" or "t".
+In terms of base editing, "t" will return enzymes that only cut after editing,
+whereas "c" will return enzymes that only cut before editing.}
 
 \item{width}{An integer specifiying range of unique cutting.}
 
