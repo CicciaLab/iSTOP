@@ -44,6 +44,7 @@ add_RFLP <- function(iSTOP, recognizes = 'c', width = 150, enzymes = NULL, cores
 
       if (recognizes == 't') {
         search <- stringr::str_replace(search, 'c', 't')
+        search <- stringr::str_replace(search, 'g', 'a')
         column_name <- paste0('RFLP_T_', width)
       } else {
         column_name <- paste0('RFLP_C_', width)
