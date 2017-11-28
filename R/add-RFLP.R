@@ -40,7 +40,7 @@ add_RFLP <- function(iSTOP, recognizes = 'c', width = 150, enzymes = NULL, cores
     pbapply::pblapply(function(df) {
 
       # Make sure c is in the search
-      search <- ifelse(str_detect(df$searched, '[ATGC]c'), df$searched, as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(df$searched))))
+      search <- ifelse(str_detect(df$searched, '[ATGC]c'), df$searched, dna_reverse_complement(df$searched))
       if (any(!str_detect(search, 'c'))) warning('add_RFLP currently only supports searching of reference sequences that contain a "c" in either strand.')
       target <- str_locate(search, 'c')[,'start']
       search <- stringr::str_sub(search, start = target - width, end = target + width)
@@ -188,4 +188,11 @@ str_to_lower_each <- function(string, pattern, locale = 'en') {
   mid <- purrr::map2(string, loc, ~stringr::str_sub(.x, start = .y[, 'start'], end = .y[, 'end']) %>% stringr::str_to_lower(locale))
 
   purrr::pmap(list(lhs, mid, rhs), str_c)
+}
+
+# Reverse complement that preserves case
+dna_reverse_complement <- function(x, complement = c('ATGCYRSWKMBDHVN' = 'TACGRYSWMKVHDBN')) {
+  from <- paste0(names(complement), stringr::str_to_lower(names(complement)))
+  to   <- paste0(complement,        stringr::str_to_lower(complement))
+  chartr(from, to, stringi::stri_reverse(x))
 }
