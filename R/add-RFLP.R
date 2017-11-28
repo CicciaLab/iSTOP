@@ -39,12 +39,14 @@ add_RFLP <- function(iSTOP, recognizes = 'c', width = 150, enzymes = NULL, cores
     split(.$chr) %>%   # split on chromosome for parallelization
     pbapply::pblapply(function(df) {
 
-      center <- ceiling(stringr::str_length(df$searched) / 2)
-      search <- stringr::str_sub(df$searched, start = center - width, end = center + width)
+      # Make sure c is in the search
+      search <- ifelse(str_detect(search, '[ATGC]c'), search, Biostrings::reverseComplement(Biostrings::DNAStringSet(search)))
+      if (any(!str_detect(search, 'c'))) warning('add_RFLP currently only supports searching of reference sequences that contain a "c" in either strand.')
+      target <- str_locate('c')[,'start']
+      search <- stringr::str_sub(df$searched, start = target - width, end = target + width)
 
       if (recognizes == 't') {
         search <- stringr::str_replace(search, 'c', 't')
-        search <- stringr::str_replace(search, 'g', 'a')
         column_name <- paste0('RFLP_T_', width)
       } else {
         column_name <- paste0('RFLP_C_', width)
