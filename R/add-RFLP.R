@@ -40,10 +40,10 @@ add_RFLP <- function(iSTOP, recognizes = 'c', width = 150, enzymes = NULL, cores
     pbapply::pblapply(function(df) {
 
       # Make sure c is in the search
-      search <- ifelse(str_detect(search, '[ATGC]c'), search, as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(search))))
+      search <- ifelse(str_detect(df$searched, '[ATGC]c'), df$searched, as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(df$searched))))
       if (any(!str_detect(search, 'c'))) warning('add_RFLP currently only supports searching of reference sequences that contain a "c" in either strand.')
       target <- str_locate('c')[,'start']
-      search <- stringr::str_sub(df$searched, start = target - width, end = target + width)
+      search <- stringr::str_sub(search, start = target - width, end = target + width)
 
       if (recognizes == 't') {
         search <- stringr::str_replace(search, 'c', 't')
