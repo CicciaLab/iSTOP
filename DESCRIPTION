@@ -21,6 +21,7 @@ Import:
     purrr,
     readr,
     stringr,
+    stringi,
     tibble,
     tidyr
 Suggests:

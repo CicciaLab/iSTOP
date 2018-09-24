@@ -28,14 +28,18 @@ get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand
     all(strand %in% c('+', '-'))
   )
 
+  at         <- as.integer(round(at))
+  add_5prime <- as.integer(round(add_5prime))
+  add_3prime <- as.integer(round(add_3prime))
+
   if (length(strand) != length(at)) strand <- rep(strand, length(at))
 
   # Determine the boundaries of this chromosome
   max_coord <- GenomeInfoDb::seqlengths(genome)[chr]
 
   # Add to 'at' in 5' and 3' direction which depends on the strand
-  start <- purrr::map2_dbl(strand, at, ~switch(.x, '+' = .y - add_5prime, '-' = .y - add_3prime))
-  end   <- purrr::map2_dbl(strand, at, ~switch(.x, '+' = .y + add_3prime, '-' = .y + add_5prime))
+  start <- ifelse(strand == '+', at - add_5prime, at - add_3prime)
+  end   <- ifelse(strand == '+', at + add_3prime, at + add_5prime)
 
   # Start should always be smaller of the two
   st <- pmin(start, end)

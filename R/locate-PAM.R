@@ -78,10 +78,10 @@ locate_PAM <- function(codons,
       # make targeted base lower case
       searched =  stringr::str_c(
         stringr::str_sub(searched, end   = flanking),                                                     # LHS
-        stringr::str_sub(searched, start = flanking + 1, end = flanking + 1) %>% stringr::str_to_lower(), # C -> c
+        stringr::str_sub(searched, start = flanking + 1, end = flanking + 1) %>% stringr::str_to_lower(), # target
         stringr::str_sub(searched, start = flanking + 2)                                                  # RHS
       ),
-      no_upstream_G = !str_detect(searched, 'Gc')
+      no_upstream_G = !str_detect(searched, 'G[tcga]')
     )
 
   # Add an sgSTOP column for each PAM
@@ -98,7 +98,7 @@ locate_PAM <- function(codons,
       guide_sequence <-
         coalesce(
           sequences[[col_name_guide]],
-          sgSTOP(sequences$searched, pattern = PAM[[i]]$pattern, base_edit = 'c', spacing = spacing[[j]], width = 20 + PAM[[i]]$width)
+          sgSTOP(sequences$searched, pattern = PAM[[i]]$pattern, base_edit = '[tcga]', spacing = spacing[[j]], width = 20 + PAM[[i]]$width)
         )
 
       guide_spacing <-
