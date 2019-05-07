@@ -12,11 +12,12 @@ VignetteBuilder: knitr
 RoxygenNote: 6.0.1
 biocViews: Software, Genetics
 Depends: R (>= 3.4)
-Import:
+Imports:
     assertthat,
     BSgenome,
     Biostrings,
     dplyr,
+    fuzzyjoin,
     pbapply,
     purrr,
     readr,
