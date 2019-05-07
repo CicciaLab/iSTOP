@@ -17,6 +17,7 @@ Imports:
     BSgenome,
     Biostrings,
     dplyr,
+    fuzzyjoin,
     pbapply,
     purrr,
     readr,
