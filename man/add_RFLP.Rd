@@ -4,8 +4,7 @@
 \alias{add_RFLP}
 \title{Add RFLP enzymes to iSTOP data}
 \usage{
-add_RFLP(iSTOP, recognizes = "c", width = 150, enzymes = NULL,
-  cores = 1)
+add_RFLP(iSTOP, recognizes = "c", width = 150, enzymes = NULL, cores = 1)
 }
 \arguments{
 \item{iSTOP}{A dataframe resulting from \link{locate_PAM}.}

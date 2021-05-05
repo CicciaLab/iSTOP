@@ -20,7 +20,7 @@ Specify preferred PAM spacing when using \link{locate_PAM}.
 }
 \details{
 \link{locate_PAM} uses these spacing ranges to optimize PAM selection when designing
-guide sequences. The priority for design is \code{optimal > good > ok > ...}. All arguments should
+guide sequences. The priority for design is \verb{optimal > good > ok > ...}. All arguments should
 be two-element numeric vectors indicating a minimum and maximum of the range. The default
 settings gives priority to PAMs that place the target base in the middle of the five base
 range of high efficiency BE3-Cas9 editing.

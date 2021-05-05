@@ -4,15 +4,20 @@
 \alias{locate_codons}
 \title{Locate codons in transcripts}
 \usage{
-locate_codons(cds, genome, codons = c("CAA", "CAG", "CGA", "TGG", "TGG"),
-  positions = c(1L, 1L, 1L, 2L, 3L), switch_strand = c(F, F, F, T, T),
-  cores = getOption("mc.cores", 1L))
+locate_codons(
+  cds,
+  genome,
+  codons = c("CAA", "CAG", "CGA", "TGG", "TGG"),
+  positions = c(1L, 1L, 1L, 2L, 3L),
+  switch_strand = c(F, F, F, T, T),
+  cores = getOption("mc.cores", 1L)
+)
 }
 \arguments{
 \item{cds}{A data.frame of CDS coordinates. See \link[=CDS#Value]{CDS} for details
 on required columns.}
 
-\item{genome}{A \link[BSgenome:BSgenome]{BSgenome} sequence database,
+\item{genome}{A \link[BSgenome:BSgenome-class]{BSgenome} sequence database,
 or a \link[=readDNAStringSet]{Biostrings}. CDS coordinates in \code{cds} should
 correspond to this genome assembly.}
 
@@ -29,7 +34,7 @@ targeted with iSTOP.}
 \code{codon} is targeted on the opposite strand. Determines the resulting value of
 \code{sg_strand}. Should be the same length as \code{codons}. Defaults to \code{c(F, F, F, T, T)}}
 
-\item{cores}{Number of cores to use for parallel processing with \link[pbapply:pblapply]{pblapply}}
+\item{cores}{Number of cores to use for parallel processing with \link[pbapply:pbapply]{pblapply}}
 }
 \value{
 A data.frame with the following columns where each row represents
@@ -57,7 +62,7 @@ will have a separate row for each):
 \description{
 Locate genome coordinates of a desired set of codons given a data.frame of
 CDS coordinates (see \link{CDS}), and its corresponding
-\link[BSgenome:BSgenome]{BSgenome} sequence database.
+\link[BSgenome:BSgenome-class]{BSgenome} sequence database.
 }
 \details{
 Each transcript is processed independently based on the \code{tx}

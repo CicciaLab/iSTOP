@@ -7,13 +7,18 @@
 \usage{
 PAM_pattern(pattern, width)
 
-PAM_patterns_default(sgNGG = PAM_pattern(".GG", 3),
-  sgNGA = PAM_pattern(".GA", 3), sgNGCG = PAM_pattern(".GCG", 4),
-  sgNGAG = PAM_pattern(".GAG", 4), sgNNGRRT = PAM_pattern("..G[AG][AG]T",
-  6), sgNNNRRT = PAM_pattern("...[AG][AG]T", 6), ...)
+PAM_patterns_default(
+  sgNGG = PAM_pattern(".GG", 3),
+  sgNGA = PAM_pattern(".GA", 3),
+  sgNGCG = PAM_pattern(".GCG", 4),
+  sgNGAG = PAM_pattern(".GAG", 4),
+  sgNNGRRT = PAM_pattern("..G[AG][AG]T", 6),
+  sgNNNRRT = PAM_pattern("...[AG][AG]T", 6),
+  ...
+)
 }
 \arguments{
-\item{pattern}{A regular expression used to identify a PAM. See the \link[stringi:stringi-search-regex]{regex documentation}
+\item{pattern}{A regular expression used to identify a PAM. See the \link[stringi:about_search_regex]{regex documentation}
 for extensive help on regular expressions.}
 
 \item{width}{A single number indicating the expected width of the PAM sequence.}
