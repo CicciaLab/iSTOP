@@ -55,7 +55,7 @@
 #'   - __rel_position__ _`dbl`_ Relative position in CDS of the targeted base
 #'
 #' @importFrom purrr map map2 pmap is_character is_integer is_logical
-#' @importFrom tibble data_frame lst
+#' @importFrom tibble tibble lst
 #' @importFrom BSgenome getSeq
 #' @importFrom Biostrings DNAStringSet translate
 #' @importFrom pbapply pblapply
@@ -126,14 +126,20 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
     as.character %>%
     str_c(collapse = '')
 
-  n_in_frame_stop <- length(which(!str_locate_all(cds_dna, 'TAA|TAG|TGA')[[1]][, 'end'] %% 3))
+  # Split CDS into codon vector
+  cds_codon_starts <- seq(1, str_length(cds_dna), by = 3L)
+  cds_codon_ends   <- cds_codon_starts + 2L
+  cds_codons       <- str_sub(cds_dna, start = cds_codon_starts, end = cds_codon_ends)
 
-  # The CDS must be properly formed
-  if (!str_detect(cds_dna, '^ATG') |           # Must begin with start codon
-      !str_detect(cds_dna, 'TAA$|TAG$|TGA$') | # Must end with stop codon
-      nchar(cds_dna) %% 3 |                    # Sequence must be multiple of 3
-      n_in_frame_stop != 1) {                  # Must have only one in-frame stop codon
-    return(NULL) # will NOT be counted as a transcript
+  # The CDS must be properly formed, if fail, don't count as transcript
+  cds_pass <-
+    head(cds_codons, n = 1L) %in% c("ATG") &                    # Must begin with start codon
+    tail(cds_codons, n = 1L) %in% c("TAA", "TAG", "TGA") &      # Must end with stop codon
+    nchar(cds_dna) %% 3 == 0L &                                 # Sequence must be multiple of 3
+    length(which(cds_codons %in% c("TAA", "TAG", "TGA"))) == 1L # Sequence must have only one stop codon
+
+  if (!cds_pass) {
+    return(NULL)
   }
 
   # Indices of features at each position in CDS
@@ -148,23 +154,26 @@ locate_codons_of_one_tx <- function(cds, genome, codons, positions, switch_stran
     tibble::lst(codons, positions, switch_strand) %>%
     pmap(function(codons, positions, switch_strand) {
       cds_position_of_first_base_in_codon <-
-        str_locate_all(cds_dna, codons) %>%
-        map(~.[.[, 'end'] %% 3 == 0, 'start']) %>% # extracts start position of in-frame codons
-        unlist %>%
-        unname
+        cds_codon_starts[which(cds_codons %in% codons)]
 
       cds_coord <- cds_position_of_first_base_in_codon + positions - 1L
-      data_frame(cds_coord) %>% mutate(codon = codons, codon_position = positions, switch_strand = switch_strand)
+      tibble(cds_coord) %>%
+        mutate(
+          codon = codons,
+          codon_position = positions,
+          switch_strand = switch_strand
+        )
     }) %>%
-    bind_rows
+    bind_rows()
 
   # Construct a basic results data frame
-  result <- data_frame(
-    tx           = unique(cds$tx),
-    gene         = unique(cds$gene),
-    cds_length   = nchar(cds_dna),
-    pep_length   = as.integer(cds_length / 3)
-  )
+  result <-
+    tibble(
+      tx           = unique(cds$tx),
+      gene         = unique(cds$gene),
+      cds_length   = nchar(cds_dna),
+      pep_length   = as.integer(cds_length / 3)
+    )
 
   # Exit if no codons were found
   if (nrow(cds_coord) < 1L) {
