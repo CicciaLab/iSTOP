@@ -1,12 +1,18 @@
-iSTOP
-=====
+# iSTOP
 
-The iSTOP R package provides tools for designing induced stop mutations using CRISPR mediated base editing. It can perform a comprehensive search for iSTOP targetable codons present in a reference sequence (either in Fasta format, or from a `BSgenome` package). A tool for visualizing iSTOP targets across alternatively spliced isoforms is also included.
+The iSTOP R package provides tools for designing induced stop mutations
+using CRISPR mediated base editing. It can perform a comprehensive
+search for iSTOP targetable codons present in a reference sequence
+(either in Fasta format, or from a `BSgenome` package). A tool for
+visualizing iSTOP targets across alternatively spliced isoforms is also
+included.
 
-Installation
-============
+# Installation
 
-First, install [R](https://cran.r-project.org) (~100 MB) and [RStudio](https://www.rstudio.com/products/rstudio/download/) (~500 MB). Once installed, open RStudio and run the following commands in the R console to install all necessary R packages (~350 MB).
+First, install [R](https://cran.r-project.org) (\~100 MB) and
+[RStudio](https://www.rstudio.com/products/rstudio/download/) (\~500
+MB). Once installed, open RStudio and run the following commands in the
+R console to install all necessary R packages (\~350 MB).
 
 ``` r
 # Source the Biocoductor installation tool - installs and loads the  
@@ -40,15 +46,21 @@ CDS_Human <- iSTOP::CDS_Hsapiens_UCSC_hg38()
 readr::write_csv(CDS_Human, '~/Desktop/CDS-Human.csv')
 ```
 
-Quick usage examples
-====================
+# Quick usage examples
 
-The following code demonstrates three common use cases, detecting iSTOP targets for (1) a single gene, (2) all genes that match a pattern, and (3) a set of transcript IDs. The workflow simply begins with CDS coordinates and a corresponding genomic sequence reference. We then:
+The following code demonstrates three common use cases, detecting iSTOP
+targets for (1) a single gene, (2) all genes that match a pattern, and
+(3) a set of transcript IDs. The workflow simply begins with CDS
+coordinates and a corresponding genomic sequence reference. We then:
 
-1.  Choose the CDS coordinates for the transcripts we are interested in using `filter`. Remove this step to search for all transcripts in your CDS coordinates table.
-2.  Locate iSTOP codons (CAA, CAG, CGA, and TGG) in these transcripts using `locate_codons`.
+1.  Choose the CDS coordinates for the transcripts we are interested in
+    using `filter`. Remove this step to search for all transcripts in
+    your CDS coordinates table.
+2.  Locate iSTOP codons (CAA, CAG, CGA, and TGG) in these transcripts
+    using `locate_codons`.
 3.  Determine whether the codon has an available PAM using `locate_PAM`.
-4.  Annotate all targeted sites with enzymes that cut uniquely +/- 150 bases using `add_RFLP`. Remove this step to reduce processing time.
+4.  Annotate all targeted sites with enzymes that cut uniquely +/- 150
+    bases using `add_RFLP`. Remove this step to reduce processing time.
 
 ``` r
 library(tidyverse)
@@ -86,10 +98,13 @@ ATR <-
 View(ATR)
 ```
 
-Visualize iSTOP coordinates
-===========================
+# Visualize iSTOP coordinates
 
-You can plot as many tracks as you like (though any more than 4 becomes difficult to read). Tracks can be named anything, and need only to be tables with at least two columns, (1) `gene` (gene names matching those in the CDS table), and (2) `genome_coord` (an integer indicating the genome coordinate to be marked in the track)
+You can plot as many tracks as you like (though any more than 4 becomes
+difficult to read). Tracks can be named anything, and need only to be
+tables with at least two columns, (1) `gene` (gene names matching those
+in the CDS table), and (2) `genome_coord` (an integer indicating the
+genome coordinate to be marked in the track)
 
 ``` r
 plot_spliced_isoforms(
@@ -106,8 +121,7 @@ plot_spliced_isoforms(
 
 ![](https://raw.githubusercontent.com/EricEdwardBryant/iSTOP/master/inst/img/BRCA1.png)
 
-Detailed usage example
-======================
+# Detailed usage example
 
 Load the following packages to make their contents available.
 
@@ -122,25 +136,40 @@ To locate iSTOP targets you will also need the following:
 1.  CDS coordinates
 2.  Genome sequence
 
-CDS coordinates
----------------
+## CDS coordinates
 
 This is an example table of CDS coordinates for *S. cerevisiae* *RAD14*.
 
 | tx      | gene  | exon | chr     | strand | start  | end    |
 |:--------|:------|:-----|:--------|:-------|:-------|:-------|
-| YMR201C | RAD14 | 1    | chrXIII | -      | 667018 | 667044 |
-| YMR201C | RAD14 | 2    | chrXIII | -      | 665845 | 666933 |
+| YMR201C | RAD14 | 1    | chrXIII | \-     | 667018 | 667044 |
+| YMR201C | RAD14 | 2    | chrXIII | \-     | 665845 | 666933 |
 
-This gene has a single transcript "YMR201C" which is encoded on the "-" strand and has two exons (1 row for each exon). Note that, since this gene is encoded on the "-" strand, the first base in the CDS is located on chrXIII at position 667044, and the last base in the CDS is at position 665845. It is critial that exons are numbered with respect to CDS orientation. Chromosomes should be named to match the sequence names in your genome. Strand must be either "+", or "-".
+This gene has a single transcript “YMR201C” which is encoded on the “-”
+strand and has two exons (1 row for each exon). Note that, since this
+gene is encoded on the “-” strand, the first base in the CDS is located
+on chrXIII at position 667044, and the last base in the CDS is at
+position 665845. It is critial that exons are numbered with respect to
+CDS orientation. Chromosomes should be named to match the sequence names
+in your genome. Strand must be either “+”, or “-”.
 
-The `CDS` function will generate a CDS table from annotation tables provided by the UCSC genome browser. Type `?CDS` in the R console to view the documentation of this function. Note that the documentation for `CDS` lists several pre-defined functions to access complete CDS coordinates for a given species and genome assembly. The example below will download and construct a CDS coordinates table for the Human genome hg38 assembly. Note that only exons that contain coding sequence are retained, hence some transcripts not having coordinates for e.g. exon \#1.
+The `CDS` function will generate a CDS table from annotation tables
+provided by the UCSC genome browser. Type `?CDS` in the R console to
+view the documentation of this function. Note that the documentation for
+`CDS` lists several pre-defined functions to access complete CDS
+coordinates for a given species and genome assembly. The example below
+will download and construct a CDS coordinates table for the Human genome
+hg38 assembly. Note that only exons that contain coding sequence are
+retained, hence some transcripts not having coordinates for e.g. exon
+\#1.
 
 ``` r
 CDS_Human <- CDS_Hsapiens_UCSC_hg38()
 ```
 
-Please be polite to UCSC by limiting the number of times you download their annotation files. I recommend saving the CDS coordinates locally by writing them to a CSV file. For example:
+Please be polite to UCSC by limiting the number of times you download
+their annotation files. I recommend saving the CDS coordinates locally
+by writing them to a CSV file. For example:
 
 ``` r
 # You probably should pick a different location than the desktop...
@@ -163,19 +192,23 @@ Other pre-defined CDS functions include:
 | Yeast | *S. cerevisiae*   | `CDS_Scerevisiae_UCSC_sacCer3()`       |
 | Plant | *A. thaliana*     | `CDS_Athaliana_BioMart_plantsmart28()` |
 
-Genome sequence
----------------
+## Genome sequence
 
 ### Using a BSgenome package
 
-Pre-built genome sequence packages are provided by Bioconductor as "BSgenome" packages. To get a list of all available BSgenome packages you can run `BSgenome::available.genomes()`. For this example we will install the BSgenome package that corresponds to the Human hg38 assembly (as this matches the CDS coordinates we downloaded earlier).
+Pre-built genome sequence packages are provided by Bioconductor as
+“BSgenome” packages. To get a list of all available BSgenome packages
+you can run `BSgenome::available.genomes()`. For this example we will
+install the BSgenome package that corresponds to the Human hg38 assembly
+(as this matches the CDS coordinates we downloaded earlier).
 
 ``` r
 # Note that the package only needs to be installed once.
 BiocInstaller::biocLite('BSgenome.Hsapiens.UCSC.hg38')
 ```
 
-Once installed we can access the genome object like so (Hint - type `bsg` then use RStudio's autocomplete to save some typing):
+Once installed we can access the genome object like so (Hint - type
+`bsg` then use RStudio’s autocomplete to save some typing):
 
 ``` r
 Genome_Human <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
@@ -183,7 +216,11 @@ Genome_Human <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
 
 ### Or, using fasta sequence files
 
-Alternatively, you can construct a genome manually from a set of fasta files. Just make sure that the sequence names match those in the `chr` column of your CDS coordinates table and that the CDS coordinates are compatible with these sequences. This is not the recommended approach as sequence lookups are slower, but this is an option!
+Alternatively, you can construct a genome manually from a set of fasta
+files. Just make sure that the sequence names match those in the `chr`
+column of your CDS coordinates table and that the CDS coordinates are
+compatible with these sequences. This is not the recommended approach as
+sequence lookups are slower, but this is an option!
 
 ``` r
 # Build custom genome of Human chromosomes X and Y
@@ -192,8 +229,7 @@ Genome_Human_XY <- Biostrings::readDNAStringSet(
     'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chrY.fa.gz'))
 ```
 
-Seach for iSTOP
----------------
+## Seach for iSTOP
 
 ``` r
 # I will be limiting this analysis to chromosomes X and Y
@@ -214,20 +250,20 @@ Hooray_XY <-
   locate_PAM(Genome_Human_XY)
 ```
 
-Other features
-==============
+# Other features
 
 -   `locate_codons` supports custom codon specification
 -   `locate_PAM` supports custom PAMs and custom spacing
 -   `add_RFLP` supports custom enzymes sets
 
-To access additional documentation for specific functions in the iSTOP package:
+To access additional documentation for specific functions in the iSTOP
+package:
 
 ``` r
 help(package = 'iSTOP')
 ```
 
-Issues? Requests?
-=================
+# Issues? Requests?
 
-If you have a feature request or have identified an issue, please submit them on [GitHub](https://github.com/CicciaLab/iSTOP/issues).
+If you have a feature request or have identified an issue, please submit
+them on [GitHub](https://github.com/CicciaLab/iSTOP/issues).

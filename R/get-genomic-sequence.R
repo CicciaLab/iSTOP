@@ -15,6 +15,7 @@
 # @param strand     <chr:vector> Strand orientation. All strand values must
 #                                be '+' or '-'.
 #' @importFrom purrr map2_dbl map_chr map
+#' @importFrom tibble tibble
 
 get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand) {
 
@@ -47,7 +48,7 @@ get_genomic_sequence <- function(at, add_5prime, add_3prime, genome, chr, strand
 
   # Limit ranges to bounds of chromosome
   ranges <-
-    data_frame(
+    tibble(
       seqnames  = chr,
       strand = strand,
       start  = ifelse(st < 1, 1, st),

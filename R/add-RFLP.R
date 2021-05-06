@@ -86,7 +86,7 @@ process_enzymes_c <- function(enzymes) {
     tidyr::gather(orientation, pattern, forward, reverse) %>%
     # Change each occurence of 'C' to 'c' one at a time (since this is the intended base change)
     mutate(pattern = str_to_lower_each(pattern, 'C')) %>%
-    tidyr::unnest() %>%
+    tidyr::unnest(cols = c(pattern)) %>%
     # If there is an ambiguous pattern for 'c' that does not include 'T' then change
     # pattern to only match 'c' (since 'T' is what 'C' will be changed to)
     mutate(pattern = stringr::str_replace(pattern, '\\[Ac\\]|\\[cG\\]|\\[AcG\\]', 'c')) %>%
@@ -112,7 +112,7 @@ process_enzymes_t <- function(enzymes) {
     tidyr::gather(orientation, pattern, forward, reverse) %>%
     # Change each occurence of 'T' to 't' one at a time (since this is the intended base change)
     mutate(pattern = str_to_lower_each(pattern, 'T')) %>%
-    tidyr::unnest() %>%
+    tidyr::unnest(cols = c(pattern)) %>%
     # If there is an ambiguous pattern for 't' that does not include 'C' then change pattern to only match 't'
     mutate(pattern = stringr::str_replace(pattern, '\\[At\\]|\\[Gt\\]|\\[AGt\\]', 't')) %>%
     # If 't' is contained within an ambiguity that includes 'C' then remove pattern

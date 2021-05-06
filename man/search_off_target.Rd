@@ -4,8 +4,16 @@
 \alias{search_off_target}
 \title{Search for candidate off target sequences.}
 \usage{
-search_off_target(guides, genome, chromosomes, fixed_start = 9,
-  fixed_end = 20, max_mismatch = 2, secondary_filter = NULL, cores = 1)
+search_off_target(
+  guides,
+  genome,
+  chromosomes,
+  fixed_start = 9,
+  fixed_end = 20,
+  max_mismatch = 2,
+  secondary_filter = NULL,
+  cores = 1
+)
 }
 \arguments{
 \item{guides}{Character vector of sequences to search for fuzzy matches in the genome.}

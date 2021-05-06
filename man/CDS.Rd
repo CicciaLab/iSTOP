@@ -90,5 +90,5 @@ are numbered in the correct order. (3) The first and last exon coordinates shoul
 begin with the start codon and end with the stop codon.
 
 To save the trouble of looking up URLs, pre-defined CDS builders
-are provided. They are named \code{CDS_<Species>_<data-source>_<genome-assembly-ID>()}.
+are provided. They are named \verb{CDS_<Species>_<data-source>_<genome-assembly-ID>()}.
 }

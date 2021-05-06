@@ -86,6 +86,6 @@ search_off_target_chr <- function(guides, chromosome, orientation,
     ) %>%
     as.list %>%
     purrr::set_names(guides) %>%
-    purrr::map_df(as_data_frame, .id = 'guide') %>%
+    purrr::map_df(as.data.frame, .id = 'guide') %>%
     mutate(strand = orientation)
 }

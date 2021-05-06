@@ -4,13 +4,19 @@
 \alias{locate_PAM}
 \title{Locate PAM near a genomic coordinate}
 \usage{
-locate_PAM(codons, genome, spacing = PAM_spacing(),
-  PAM = PAM_patterns_default(), flanking = 150, keep_PAM = FALSE)
+locate_PAM(
+  codons,
+  genome,
+  spacing = PAM_spacing(),
+  PAM = PAM_patterns_default(),
+  flanking = 150,
+  keep_PAM = FALSE
+)
 }
 \arguments{
 \item{codons}{A dataframe resulting from \link{locate_codons}.}
 
-\item{genome}{A \link[BSgenome:BSgenome]{BSgenome} sequence database,
+\item{genome}{A \link[BSgenome:BSgenome-class]{BSgenome} sequence database,
 or a \link[=readDNAStringSet]{Biostrings}. Used to extract the genomic sequence context
 for each genomic coordinate in \code{codons}.}
 
@@ -22,7 +28,7 @@ first range prioritized over the next. Defaults to \code{PAM_spacing()}.}
 
 \item{PAM}{A named list of PAM patterns to be considered (see \link{PAM_pattern}). Names
 correspond to resulting column names in the returned dataframe. Default PAM patterns
-include \code{.GG}, \code{.GA}, \code{.GCG}, \code{.GAG}, \code{..G[AG][AG]T}, and \code{...[AG][AG]T}.}
+include \code{.GG}, \code{.GA}, \code{.GCG}, \code{.GAG}, \verb{..G[AG][AG]T}, and \verb{...[AG][AG]T}.}
 
 \item{flanking}{An number specifying how much flanking genomic context to return
 in the resulting dataframe. Defaults to 150.}
